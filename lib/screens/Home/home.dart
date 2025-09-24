@@ -1,6 +1,10 @@
+// ignore_for_file: no_leading_underscores_for_local_identifiers
+
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:event_manager_local/services/event_service.dart';
+import 'package:event_manager_local/widgets/event_list_tiles.dart';
 import 'package:event_manager_local/widgets/featured_courasel.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,6 +20,7 @@ class _HomeState extends State<Home> {
   String? username;
   List<Event> events = [];
   List<Event> featuredEvents = [];
+  List<Event> upcomingEvents = [];
 
   @override
   void dispose() {
@@ -44,19 +49,31 @@ class _HomeState extends State<Home> {
   void getFeaturedEvents() async {
     final EventService eventService = EventService();
     final List<Event> allEvents = await eventService.getEvents();
-    print('Total events fetched: ${allEvents.length}');
+    if (kDebugMode) {
+      print('Total events fetched: ${allEvents.length}');
+    }
 
     final List<Event> featuredEvents = allEvents
         .where((event) => event.isFeatured)
         .toList();
+        
+    final List<Event> upcomingEvents = allEvents
+        .where((event) => event.startDateTime.isAfter(DateTime.now()))
+        .toList();
 
-    print('Featured events found: ${featuredEvents.length}');
+    if (kDebugMode) {
+      print('Featured events found: ${featuredEvents.length}');
+      print('Upcoming events found: ${upcomingEvents.length}');
+    }
     for (var event in allEvents) {
-      print('Event: ${event.title}, isFeatured: ${event.isFeatured}');
+      if (kDebugMode) {
+        print('Event: ${event.title}, isFeatured: ${event.isFeatured}');
+      }
     }
 
     setState(() {
       this.featuredEvents = featuredEvents;
+      this.upcomingEvents = upcomingEvents;
     });
   }
 
@@ -135,6 +152,14 @@ class _HomeState extends State<Home> {
         children: [
           SizedBox(height: 20),
           Expanded(child: FeaturedCarousel(featuredEvents)),
+          SizedBox(height: 10),
+          Expanded(
+            child: EventListTiles(
+              events: upcomingEvents, 
+              title: "Upcoming Events",
+              limit: 10, // Show only first 10 events by default
+            ),
+          ),
         ],
       ),
     );

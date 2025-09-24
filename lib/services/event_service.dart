@@ -5,9 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class EventService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<List<Event>> getEvents() async {
+  Future<List<Event>> getEvents({int? limit}) async {
     try {
-      final response = await _supabase
+      var query = _supabase
           .from('events')
           .select('''
           *,
@@ -16,6 +16,12 @@ class EventService {
           event_categories (*)
         ''')
           .order('created_at', ascending: true);
+          
+      if (limit != null) {
+        query = query.limit(limit);
+      }
+      
+      final response = await query;
 
       debugPrint("Raw response from Supabase: $response");
       
