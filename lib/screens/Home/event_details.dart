@@ -5,6 +5,7 @@ import 'package:event_manager_local/models/ticket.dart';
 import 'package:flutter/material.dart';
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:flutter/services.dart'; // Needed for image error handling
+import 'package:cached_network_image/cached_network_image.dart';
 
 class EventDetails extends StatefulWidget {
   final Event event;
@@ -116,33 +117,21 @@ class _EventDetailsState extends State<EventDetails> {
               SizedBox(
                 height: 300,
                 child: ClipRRect(
-                  child: widget.event.bannerUrl.isNotEmpty
-                      ? Image.network(
-                          widget.event.bannerUrl,
-                          fit: BoxFit.cover,
-                          height: 300,
-                          width: double.infinity,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              height: 300,
-                              color: Colors.grey.shade200,
-                              child: Icon(
-                                Icons.event,
-                                color: Colors.grey.shade400,
-                                size: 64,
-                              ),
-                            );
-                          },
-                        )
-                      : Container(
-                          height: 300,
-                          color: Colors.grey.shade200,
-                          child: Icon(
-                            Icons.event,
-                            color: Colors.grey.shade400,
-                            size: 64,
-                          ),
-                        ),
+                  child: CachedNetworkImage(
+                    imageUrl: widget.event.bannerUrl,
+                    width: double.infinity,
+                    height: 300,
+                    fit: BoxFit.cover,
+                    errorWidget: (context, url, error) => Container(
+                      height: 300,
+                      color: Colors.grey.shade200,
+                      child: Icon(
+                        Icons.event,
+                        color: Colors.grey.shade400,
+                        size: 64,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               Container(
@@ -203,7 +192,7 @@ class _EventDetailsState extends State<EventDetails> {
                       children: [
                         widget.event.organiser.profileUrl.isNotEmpty
                             ? CircleAvatar(
-                                backgroundImage: NetworkImage(widget.event.organiser.profileUrl),
+                                backgroundImage: CachedNetworkImageProvider(widget.event.organiser.profileUrl),
                                 child: widget.event.organiser.profileUrl.isEmpty
                                     ? Icon(Icons.person, color: Colors.grey[600])
                                     : null,

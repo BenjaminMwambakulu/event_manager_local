@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class FeaturedCarousel extends StatelessWidget {
   final List<Event> featuredEvents;
@@ -69,29 +70,18 @@ class FeaturedCarousel extends StatelessWidget {
                           fit: StackFit.expand,
                           children: [
                             // Image with fixed height
-                            event.bannerUrl.isNotEmpty
-                                ? Image.network(
-                                    event.bannerUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        color: Colors.grey.shade300,
-                                        child: Icon(
-                                          Icons.event,
-                                          color: Colors.grey.shade500,
-                                          size: 48,
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : Container(
-                                    color: Colors.grey.shade300,
-                                    child: Icon(
-                                      Icons.event,
-                                      color: Colors.grey.shade500,
-                                      size: 48,
-                                    ),
-                                  ),
+                            CachedNetworkImage(
+                              imageUrl: event.bannerUrl,
+                              fit: BoxFit.cover,
+                              errorWidget: (context, url, error) => Container(
+                                color: Colors.grey.shade300,
+                                child: Icon(
+                                  Icons.event,
+                                  color: Colors.grey.shade500,
+                                  size: 48,
+                                ),
+                              ),
+                            ),
 
                             // Gradient overlay with info
                             Align(

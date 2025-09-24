@@ -10,14 +10,14 @@ class TicketService {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) {
-        debugPrint('No authenticated user found');
+        debugPrint('TicketService: No authenticated user found');
         return [];
       }
 
       // Get the profile ID for the current user
       final profileId = await _getUserProfileId(user.id);
       if (profileId == null) {
-        debugPrint('No profile found for user ${user.id}');
+        debugPrint('TicketService: No profile found for user ${user.id}');
         return [];
       }
 
@@ -35,13 +35,15 @@ class TicketService {
           .eq('user_id', profileId)
           .order('created_at', ascending: false);
 
-      debugPrint('Fetched ${response.length} tickets for user');
+      debugPrint('TicketService: Fetched ${response.length} tickets for user');
       
-      return (response as List<dynamic>)
+      final attendees = (response as List<dynamic>)
           .map((json) => Attendee.fromJson(json as Map<String, dynamic>))
           .toList();
+
+      return attendees;
     } catch (e) {
-      debugPrint('Error fetching user tickets: $e');
+      debugPrint('TicketService: Error fetching user tickets: $e');
       return [];
     }
   }
@@ -134,7 +136,7 @@ class TicketService {
 
       return response?['id']?.toString();
     } catch (e) {
-      debugPrint('Error getting user profile ID: $e');
+      debugPrint('TicketService: Error getting user profile ID: $e');
       return null;
     }
   }

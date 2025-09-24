@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:event_manager_local/models/ticket.dart';
 
@@ -21,15 +22,20 @@ class Attendee {
   });
 
   factory Attendee.fromJson(Map<String, dynamic> json) {
-    return Attendee(
-      id: json['id'].toString(),
-      userId: json['user_id'].toString(),
-      eventId: json['event_id'].toString(),
-      ticketId: json['ticket_id'].toString(),
-      registeredAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      event: json['events'] != null ? Event.fromJson(json['events']) : null,
-      ticket: json['tickets'] != null ? Ticket.fromJson(json['tickets']) : null,
-    );
+    try {
+      return Attendee(
+        id: json['id'].toString(),
+        userId: json['user_id'].toString(),
+        eventId: json['event_id'].toString(),
+        ticketId: json['ticket_id'].toString(),
+        registeredAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+        event: json['events'] != null ? Event.fromJson(json['events']) : null,
+        ticket: json['tickets'] != null ? Ticket.fromJson(json['tickets']) : null,
+      );
+    } catch (e) {
+      debugPrint('Attendee.fromJson: Error parsing JSON: $e');
+      rethrow;
+    }
   }
 
   /// Generate QR code data for this attendee

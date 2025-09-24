@@ -1,5 +1,6 @@
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class EventListTiles extends StatefulWidget {
   const EventListTiles({
@@ -97,25 +98,20 @@ class _EventListTilesState extends State<EventListTiles> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // Event Image
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    event.bannerUrl,
+                                CachedNetworkImage(
+                                  imageUrl: event.bannerUrl,
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (context, url, error) => Container(
                                     width: 80,
                                     height: 80,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: 80,
-                                        height: 80,
-                                        color: Colors.grey.shade200,
-                                        child: Icon(
-                                          Icons.event,
-                                          color: Colors.grey.shade400,
-                                          size: 32,
-                                        ),
-                                      );
-                                    },
+                                    color: Colors.grey.shade200,
+                                    child: Icon(
+                                      Icons.event,
+                                      color: Colors.grey.shade400,
+                                      size: 32,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 16),

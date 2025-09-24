@@ -28,6 +28,7 @@ class _MyTicketState extends State<MyTicket> {
 
     try {
       final tickets = await _ticketService.getUserTickets();
+      
       if (mounted) {
         setState(() {
           _userTickets = tickets;
@@ -35,7 +36,7 @@ class _MyTicketState extends State<MyTicket> {
         });
       }
     } catch (e) {
-      debugPrint('Error loading user tickets: $e');
+      debugPrint('MyTicket: Error loading user tickets: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -105,7 +106,7 @@ class _MyTicketState extends State<MyTicket> {
           ),
         ),
         SizedBox(
-          height: 280,
+          height: 220,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 8),
