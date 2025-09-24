@@ -17,9 +17,14 @@ class EventService {
         ''')
           .order('created_at', ascending: true);
 
-      return (response as List<dynamic>)
+      debugPrint("Raw response from Supabase: $response");
+      
+      final events = (response as List<dynamic>)
           .map((json) => Event.fromJson(json as Map<String, dynamic>))
           .toList();
+          
+      debugPrint("Parsed ${events.length} events successfully");
+      return events;
     } catch (e) {
       debugPrint("Error fetching events: $e");
       return [];

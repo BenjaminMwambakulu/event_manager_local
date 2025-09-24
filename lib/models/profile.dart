@@ -1,5 +1,5 @@
 class Profile {
-  final int id;
+  final String id;
   final String username;
   final String profileUrl;
 
@@ -11,7 +11,7 @@ class Profile {
 
   factory Profile.fromJson(Map<String, dynamic> json) {
     return Profile(
-      id: json['id'] as int,
+      id: json['id'].toString(),
       username: json['username'] ?? '',
       profileUrl: json['profile_url'] ?? '',
     );

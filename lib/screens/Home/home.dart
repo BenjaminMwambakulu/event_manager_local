@@ -1,3 +1,5 @@
+import 'package:event_manager_local/models/event_model.dart';
+import 'package:event_manager_local/services/event_service.dart';
 import 'package:event_manager_local/widgets/featured_courasel.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +14,8 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   String? username;
+  List<Event> events = [];
+  List<Event> featuredEvents = [];
 
   @override
   void dispose() {
@@ -29,10 +33,38 @@ class _HomeState extends State<Home> {
     }
   }
 
+  void getEvents() async {
+    final EventService eventService = EventService();
+    final List<Event> events = await eventService.getEvents();
+    setState(() {
+      this.events = events;
+    });
+  }
+
+  void getFeaturedEvents() async {
+    final EventService eventService = EventService();
+    final List<Event> allEvents = await eventService.getEvents();
+    print('Total events fetched: ${allEvents.length}');
+
+    final List<Event> featuredEvents = allEvents
+        .where((event) => event.isFeatured)
+        .toList();
+
+    print('Featured events found: ${featuredEvents.length}');
+    for (var event in allEvents) {
+      print('Event: ${event.title}, isFeatured: ${event.isFeatured}');
+    }
+
+    setState(() {
+      this.featuredEvents = featuredEvents;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     getUserInfo();
+    getFeaturedEvents();
   }
 
   Future<void> _signOut() async {
@@ -102,7 +134,7 @@ class _HomeState extends State<Home> {
       body: Column(
         children: [
           SizedBox(height: 20),
-          Expanded(child: FeaturedCarousel()),
+          Expanded(child: FeaturedCarousel(featuredEvents)),
         ],
       ),
     );
