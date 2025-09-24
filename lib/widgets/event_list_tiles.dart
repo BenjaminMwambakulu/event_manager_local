@@ -57,8 +57,6 @@ class _EventListTilesState extends State<EventListTiles> {
                   ),
                 Expanded(
                   child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: AlwaysScrollableScrollPhysics(),
                     itemCount: widget.limit != null 
                         ? (widget.events.length > widget.limit! 
                             ? widget.limit! 

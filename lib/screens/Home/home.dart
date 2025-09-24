@@ -4,6 +4,7 @@ import 'package:event_manager_local/models/event_model.dart';
 import 'package:event_manager_local/services/event_service.dart';
 import 'package:event_manager_local/widgets/event_list_tiles.dart';
 import 'package:event_manager_local/widgets/featured_courasel.dart';
+import 'package:event_manager_local/widgets/my_ticket_card.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,7 +57,7 @@ class _HomeState extends State<Home> {
     final List<Event> featuredEvents = allEvents
         .where((event) => event.isFeatured)
         .toList();
-        
+
     final List<Event> upcomingEvents = allEvents
         .where((event) => event.startDateTime.isAfter(DateTime.now()))
         .toList();
@@ -151,14 +152,23 @@ class _HomeState extends State<Home> {
       body: Column(
         children: [
           SizedBox(height: 20),
-          Expanded(child: FeaturedCarousel(featuredEvents)),
+          Expanded(
+            flex: 2, // Give more space to the featured carousel
+            child: FeaturedCarousel(featuredEvents),
+          ),
           SizedBox(height: 10),
           Expanded(
+            flex: 3, // Give more space to the event list
             child: EventListTiles(
-              events: upcomingEvents, 
+              events: upcomingEvents,
               title: "Upcoming Events",
               limit: 10, // Show only first 10 events by default
             ),
+          ),
+          // MyTicketCard with fixed height
+          Container(
+            height: 200,
+            child: MyTicketCard(),
           ),
         ],
       ),
