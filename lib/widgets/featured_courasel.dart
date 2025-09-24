@@ -69,7 +69,29 @@ class FeaturedCarousel extends StatelessWidget {
                           fit: StackFit.expand,
                           children: [
                             // Image with fixed height
-                            Image.network(event.bannerUrl, fit: BoxFit.cover),
+                            event.bannerUrl.isNotEmpty
+                                ? Image.network(
+                                    event.bannerUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.grey.shade300,
+                                        child: Icon(
+                                          Icons.event,
+                                          color: Colors.grey.shade500,
+                                          size: 48,
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : Container(
+                                    color: Colors.grey.shade300,
+                                    child: Icon(
+                                      Icons.event,
+                                      color: Colors.grey.shade500,
+                                      size: 48,
+                                    ),
+                                  ),
 
                             // Gradient overlay with info
                             Align(

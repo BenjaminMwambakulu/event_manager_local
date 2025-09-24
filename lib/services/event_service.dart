@@ -36,4 +36,21 @@ class EventService {
       return [];
     }
   }
+
+  // Handle Register to an Event
+  Future<void> registerToEvent(String eventId, String profileId, String ticketId) async {
+    try {
+      await _supabase.from('attendee').insert({
+        'event_id': eventId,
+        'user_id': profileId, // This should be the profile ID, not auth user ID
+        'ticket_id': ticketId
+      });
+      debugPrint("Successfully registered user $profileId to event $eventId");
+    } catch (e) {
+      debugPrint("Error registering to event: $e");
+      rethrow; // Re-throw so the calling code can handle it
+    }
+  }
 }
+
+
