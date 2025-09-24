@@ -18,6 +18,13 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   final AuthService _authService = AuthService();
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _completeOnboarding() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isFirstTime', false);
@@ -39,17 +46,26 @@ class _LoginPageState extends State<LoginPage> {
         _prefs.setString('userId', user.id);
         _prefs.setString('email', user.email ?? '');
         _prefs.setString("username", user.userMetadata?['username'] ?? '');
+        
+        // Check if the widget is still mounted before navigating
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        }
       }
     } catch (e) {
+      // Check if the widget is still mounted before showing snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login failed: ${e.toString()}')),
         );
       }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      // Check if the widget is still mounted before setting state
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

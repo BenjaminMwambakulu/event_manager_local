@@ -28,10 +28,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final bool isFirstTime = prefs.getBool('isFirstTime') ?? true;
     
-    setState(() {
-      _showOnboarding = isFirstTime;
-      _isLoading = false;
-    });
+    // Check if the widget is still mounted before setting state
+    if (mounted) {
+      setState(() {
+        _showOnboarding = isFirstTime;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -49,13 +52,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
     return StreamBuilder<AuthState>(
       stream: _authStateStream,
       builder: (context, snapshot) {
-        // Always check the current session, not just the stream data
-        final session = Supabase.instance.client.auth.currentSession;
-
-        if (session != null) {
-          return const MainHome();
+        // Use the actual stream data for responsive authentication state changes
+        if (snapshot.connectionState == ConnectionState.active) {
+          final session = snapshot.data?.session;
+          if (session != null) {
+            return const MainHome();
+          }
         }
-
+        
+        // Show login page if not authenticated or connection not active
         return const LoginPage();
       },
     );

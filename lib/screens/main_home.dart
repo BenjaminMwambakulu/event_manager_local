@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
 import './Home/home.dart';
 
 class MainHome extends StatefulWidget {
@@ -10,6 +11,7 @@ class MainHome extends StatefulWidget {
 
 class _MainHomeState extends State<MainHome> {
   int _currentIndex = 0;
+  // final SupabaseClient _supabase = Supabase.instance.client;
 
   final List<Widget> _pages = [
     Home(),
@@ -17,6 +19,22 @@ class _MainHomeState extends State<MainHome> {
     Text("Page 3"),
     Text("Page 4"),
   ];
+
+  // Future<void> _signOut() async {
+  //   try {
+  //     await _supabase.auth.signOut();
+  //     if (mounted) {
+  //       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  //     }
+  //   } catch (e) {
+  //     if (mounted) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Logout failed: ${e.toString()}')),
+  //       );
+  //     }
+  //   }
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
