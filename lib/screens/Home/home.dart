@@ -149,28 +149,29 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          SizedBox(height: 20),
-          Expanded(
-            flex: 2, // Give more space to the featured carousel
-            child: FeaturedCarousel(featuredEvents),
-          ),
-          SizedBox(height: 10),
-          Expanded(
-            flex: 3, // Give more space to the event list
-            child: EventListTiles(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(height: 20),
+            // Featured carousel with fixed height
+            Container(
+              height: 280,
+              width: double.infinity,
+              child: FeaturedCarousel(featuredEvents),
+            ),
+            SizedBox(height: 20),
+            // Event list with flexible height
+            EventListTiles(
               events: upcomingEvents,
               title: "Upcoming Events",
               limit: 10, // Show only first 10 events by default
             ),
-          ),
-          // MyTicketCard with fixed height
-          Container(
-            height: 200,
-            child: MyTicketCard(),
-          ),
-        ],
+            SizedBox(height: 20),
+            // MyTicketCard
+            MyTicketCard(),
+            SizedBox(height: 20), // Bottom padding
+          ],
+        ),
       ),
     );
   }

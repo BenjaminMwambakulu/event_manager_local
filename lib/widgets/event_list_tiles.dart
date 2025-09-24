@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 
 class EventListTiles extends StatefulWidget {
   const EventListTiles({
-    super.key, 
-    required this.events, 
+    super.key,
+    required this.events,
     this.title,
     this.limit,
   });
@@ -55,131 +55,103 @@ class _EventListTilesState extends State<EventListTiles> {
                       ),
                     ),
                   ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: widget.limit != null 
-                        ? (widget.events.length > widget.limit! 
-                            ? widget.limit! 
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: widget.limit != null
+                      ? (widget.events.length > widget.limit!
+                            ? widget.limit!
                             : widget.events.length)
-                        : widget.events.length,
-                    itemBuilder: (context, index) {
-                      final event = widget.events[index];
-                      return Container(
-                        margin: const EdgeInsets.only(
-                          bottom: 12,
-                          left: 12,
-                          right: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: Colors.grey.shade200),
+                      : widget.events.length,
+                  itemBuilder: (context, index) {
+                    final event = widget.events[index];
+                    return Container(
+                      margin: const EdgeInsets.only(
+                        bottom: 12,
+                        left: 12,
+                        right: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade200),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.shade100,
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.shade100,
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              // Add onTap functionality here
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Event Image
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      event.bannerUrl,
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                            return Container(
-                                              width: 80,
-                                              height: 80,
-                                              color: Colors.grey.shade200,
-                                              child: Icon(
-                                                Icons.event,
-                                                color: Colors.grey.shade400,
-                                                size: 32,
-                                              ),
-                                            );
-                                          },
-                                    ),
+                          onTap: () {
+                            // Add onTap functionality here
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Event Image
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    event.bannerUrl,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        width: 80,
+                                        height: 80,
+                                        color: Colors.grey.shade200,
+                                        child: Icon(
+                                          Icons.event,
+                                          color: Colors.grey.shade400,
+                                          size: 32,
+                                        ),
+                                      );
+                                    },
                                   ),
-                                  const SizedBox(width: 16),
-                                  // Event Details
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Event Title
-                                        Text(
-                                          event.title,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 16,
-                                              ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 6),
+                                ),
+                                const SizedBox(width: 16),
+                                // Event Details
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Event Title
+                                      Text(
+                                        event.title,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16,
+                                            ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 6),
 
-                                        // Location
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.location_on_outlined,
-                                              size: 14,
-                                              color: Colors.grey[600],
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Expanded(
-                                              child: Text(
-                                                event.location,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.copyWith(
-                                                      fontSize: 13,
-                                                      color: Colors.grey[700],
-                                                    ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-
-                                        // Date & Time
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.calendar_today_outlined,
-                                              size: 14,
-                                              color: Colors.grey[600],
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              _formatDateTime(
-                                                event.startDateTime,
-                                              ),
+                                      // Location
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.location_on_outlined,
+                                            size: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              event.location,
                                               style: Theme.of(context)
                                                   .textTheme
                                                   .bodySmall
@@ -187,20 +159,47 @@ class _EventListTilesState extends State<EventListTiles> {
                                                     fontSize: 13,
                                                     color: Colors.grey[700],
                                                   ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+
+                                      // Date & Time
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.calendar_today_outlined,
+                                            size: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _formatDateTime(
+                                              event.startDateTime,
+                                            ),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  fontSize: 13,
+                                                  color: Colors.grey[700],
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
