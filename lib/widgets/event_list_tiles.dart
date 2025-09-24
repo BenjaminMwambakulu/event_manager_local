@@ -7,10 +7,12 @@ class EventListTiles extends StatefulWidget {
     required this.events,
     this.title,
     this.limit,
+    this.onTap,
   });
   final List<Event> events;
   final String? title;
   final int? limit;
+  final void Function(Event)? onTap;
 
   @override
   State<EventListTiles> createState() => _EventListTilesState();
@@ -88,9 +90,7 @@ class _EventListTilesState extends State<EventListTiles> {
                         color: Colors.transparent,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(16),
-                          onTap: () {
-                            // Add onTap functionality here
-                          },
+                          onTap: widget.onTap != null ? () => widget.onTap!(event) : null,
                           child: Padding(
                             padding: const EdgeInsets.all(12.0),
                             child: Row(

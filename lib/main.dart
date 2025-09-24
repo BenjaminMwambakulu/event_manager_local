@@ -4,6 +4,8 @@ import 'package:event_manager_local/screens/Auth/login_page.dart';
 import 'package:event_manager_local/screens/Auth/signup.dart';
 import 'package:event_manager_local/screens/auth_wrapper.dart';
 import 'package:event_manager_local/screens/main_home.dart';
+import 'package:event_manager_local/screens/Home/event_details.dart';
+import 'package:event_manager_local/models/event_model.dart';
 import 'package:event_manager_local/themedata.dart';
 
 void main() async {
@@ -28,10 +30,27 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: MinimalTheme.lightTheme,
       home: const AuthWrapper(),
-      routes: {
-        "/home": (context) => const MainHome(),
-        "/login": (context) => const LoginPage(),
-        "/signup": (context) => const SignupPage(),
+      onGenerateRoute: (settings) {
+        // Handle the event details route with arguments
+        if (settings.name == '/event_details') {
+          final event = settings.arguments as Event;
+          return MaterialPageRoute(
+            builder: (context) => EventDetails(event: event),
+          );
+        }
+        
+        // Handle other named routes
+        switch (settings.name) {
+          case '/home':
+            return MaterialPageRoute(builder: (context) => const MainHome());
+          case '/login':
+            return MaterialPageRoute(builder: (context) => const LoginPage());
+          case '/signup':
+            return MaterialPageRoute(builder: (context) => const SignupPage());
+          default:
+            // Return null to let the default route handling take over
+            return null;
+        }
       },
     );
   }

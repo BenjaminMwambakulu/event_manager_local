@@ -4,7 +4,7 @@ import 'package:event_manager_local/models/event_model.dart';
 import 'package:event_manager_local/services/event_service.dart';
 import 'package:event_manager_local/widgets/event_list_tiles.dart';
 import 'package:event_manager_local/widgets/featured_courasel.dart';
-import 'package:event_manager_local/widgets/my_ticket_card.dart';
+import 'package:event_manager_local/widgets/horizontal_tickets_section.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -154,7 +154,7 @@ class _HomeState extends State<Home> {
           children: [
             SizedBox(height: 20),
             // Featured carousel with fixed height
-            Container(
+            SizedBox(
               height: 280,
               width: double.infinity,
               child: FeaturedCarousel(featuredEvents),
@@ -164,11 +164,18 @@ class _HomeState extends State<Home> {
             EventListTiles(
               events: upcomingEvents,
               title: "Upcoming Events",
-              limit: 10, // Show only first 10 events by default
+              limit: 5,
+              onTap: (event) {
+                Navigator.pushNamed(
+                  context,
+                  '/event_details',
+                  arguments: event,
+                );
+              },
             ),
             SizedBox(height: 20),
-            // MyTicketCard
-            MyTicketCard(),
+            // Horizontal Tickets Section
+            const HorizontalTicketsSection(),
             SizedBox(height: 20), // Bottom padding
           ],
         ),
