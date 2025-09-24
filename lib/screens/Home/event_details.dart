@@ -4,6 +4,7 @@ import 'package:event_manager_local/services/registration_service.dart';
 import 'package:event_manager_local/models/ticket.dart';
 import 'package:flutter/material.dart';
 import 'package:event_manager_local/models/event_model.dart';
+import 'package:flutter/services.dart'; // Needed for image error handling
 
 class EventDetails extends StatefulWidget {
   final Event event;
@@ -200,15 +201,17 @@ class _EventDetailsState extends State<EventDetails> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        CircleAvatar(
-                          backgroundImage:
-                              widget.event.organiser.profileUrl.isNotEmpty
-                              ? NetworkImage(widget.event.organiser.profileUrl)
-                              : null,
-                          child: widget.event.organiser.profileUrl.isEmpty
-                              ? Icon(Icons.person, color: Colors.grey[600])
-                              : null,
-                        ),
+                        widget.event.organiser.profileUrl.isNotEmpty
+                            ? CircleAvatar(
+                                backgroundImage: NetworkImage(widget.event.organiser.profileUrl),
+                                child: widget.event.organiser.profileUrl.isEmpty
+                                    ? Icon(Icons.person, color: Colors.grey[600])
+                                    : null,
+                              )
+                            : CircleAvatar(
+                                backgroundColor: Colors.grey.shade200,
+                                child: Icon(Icons.person, color: Colors.grey.shade400),
+                              ),
                         const SizedBox(width: 12),
                         Text(
                           widget.event.organiser.username,

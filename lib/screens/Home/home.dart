@@ -4,7 +4,7 @@ import 'package:event_manager_local/models/event_model.dart';
 import 'package:event_manager_local/services/event_service.dart';
 import 'package:event_manager_local/widgets/event_list_tiles.dart';
 import 'package:event_manager_local/widgets/featured_courasel.dart';
-import 'package:event_manager_local/widgets/horizontal_tickets_section.dart';
+import 'package:event_manager_local/widgets/my_ticket.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -174,8 +174,8 @@ class _HomeState extends State<Home> {
               },
             ),
             SizedBox(height: 20),
-            // Horizontal Tickets Section
-            const HorizontalTicketsSection(),
+            // My Tickets Section
+            const MyTicket(),
             SizedBox(height: 20), // Bottom padding
           ],
         ),

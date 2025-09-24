@@ -1,7 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:event_manager_local/services/ticket_service.dart';
 
-class MyTicketCard extends StatelessWidget {
-  const MyTicketCard({super.key});
+class MyTicketCard extends StatefulWidget {
+  final VoidCallback? onTap;
+
+  const MyTicketCard({super.key, this.onTap});
+
+  @override
+  State<MyTicketCard> createState() => _MyTicketCardState();
+}
+
+class _MyTicketCardState extends State<MyTicketCard> {
+  final TicketService _ticketService = TicketService();
+  int _ticketCount = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTicketCount();
+  }
+
+  Future<void> _loadTicketCount() async {
+    try {
+      final count = await _ticketService.getUserTicketCount();
+      if (mounted) {
+        setState(() {
+          _ticketCount = count;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,87 +122,107 @@ class MyTicketCard extends StatelessWidget {
                     color: Colors.blue.shade700,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    "3", // You can make this dynamic
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          "$_ticketCount",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
                 ),
               ],
             ),
           ),
 
           // QR Code Section
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
               borderRadius: const BorderRadius.vertical(
                 bottom: Radius.circular(20),
               ),
-            ),
-            child: Row(
-              children: [
-                // QR Code Container
-                Container(
-                  height: 70,
-                  width: 70,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Colors.blue.shade500, Colors.blue.shade700],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.blue.shade200,
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.qr_code_scanner,
-                      color: Colors.white,
-                      size: 32,
-                    ),
+              onTap: widget.onTap,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20),
                   ),
                 ),
-                const SizedBox(width: 16),
-
-                // Action Text
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Quick Access",
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[800],
+                child: Row(
+                  children: [
+                    // QR Code Container
+                    Container(
+                      height: 70,
+                      width: 70,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.blue.shade500, Colors.blue.shade700],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.shade200,
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.qr_code_scanner,
+                          color: Colors.white,
+                          size: 32,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Tap to view your tickets or scan QR codes",
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                    const SizedBox(width: 16),
 
-                // Forward Arrow
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: Colors.grey.shade500,
-                  size: 16,
+                    // Action Text
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Quick Access",
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _ticketCount > 0 
+                                ? "Tap to view your $_ticketCount ticket${_ticketCount == 1 ? '' : 's'}"
+                                : "No tickets yet - register for events",
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Forward Arrow
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: Colors.grey.shade500,
+                      size: 16,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],

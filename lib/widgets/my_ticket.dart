@@ -1,170 +1,254 @@
-// import 'package:event_management/Models/event_model.dart';
-// import 'package:event_management/providers/registered_events.dart';
-// import 'package:flutter/material.dart';
-// import 'package:qr_flutter/qr_flutter.dart';
-// import 'package:supabase_flutter/supabase_flutter.dart';
-// import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+import 'package:event_manager_local/models/attendee_model.dart';
+import 'package:event_manager_local/services/ticket_service.dart';
+import 'package:event_manager_local/widgets/attendee_ticket_card.dart';
 
-// class MyTicket extends StatefulWidget {
-//   const MyTicket({super.key});
+class MyTicket extends StatefulWidget {
+  const MyTicket({super.key});
 
-//   @override
-//   State<MyTicket> createState() => _MyTicketState();
-// }
+  @override
+  State<MyTicket> createState() => _MyTicketState();
+}
 
-// class _MyTicketState extends State<MyTicket> {
-//   final supabase = Supabase.instance.client;
+class _MyTicketState extends State<MyTicket> {
+  final TicketService _ticketService = TicketService();
+  List<Attendee> _userTickets = [];
+  bool _isLoading = true;
 
-//   @override
-//   Widget build(BuildContext context) {
-//     double height = 300;
+  @override
+  void initState() {
+    super.initState();
+    _loadUserTickets();
+  }
 
-//     return Consumer<RegisteredEvents>(
-//       builder: (context, registeredEventsProvider, child) {
-//         // We don't need to fetch events here as they are already in the provider
-//         final events = registeredEventsProvider.registeredEvents;
+  Future<void> _loadUserTickets() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-//         if (registeredEventsProvider.isLoading) {
-//           return SizedBox(
-//             height: height,
-//             child: const Center(child: CircularProgressIndicator()),
-//           );
-//         }
+    try {
+      final tickets = await _ticketService.getUserTickets();
+      if (mounted) {
+        setState(() {
+          _userTickets = tickets;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading user tickets: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
-//         if (events.isEmpty) {
-//           return SizedBox(
-//             height: height,
-//             child: const Center(child: Text('No registered events')),
-//           );
-//         }
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const SizedBox(
+        height: 300,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-//         return SizedBox(
-//           height: height,
-//           child: ListView.builder(
-//             scrollDirection: Axis.horizontal,
-//             itemCount: events.length,
-//             padding: const EdgeInsets.all(16),
-//             itemBuilder: (context, index) {
-//               return Padding(
-//                 padding: const EdgeInsets.only(right: 16),
-//                 child: TicketCard(
-//                   eventData: events[index],
-//                   userId: supabase.auth.currentUser!.id,
-//                 ),
-//               );
-//             },
-//           ),
-//         );
-//       },
-//     );
-//   }
-// }
+    if (_userTickets.isEmpty) {
+      return _buildEmptyState();
+    }
 
-// class TicketCard extends StatelessWidget {
-//   final Event eventData;
-//   final String userId;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'My Tickets',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${_userTickets.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/tickets'),
+                    child: Text(
+                      'View All',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 280,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemCount: _userTickets.length,
+            itemBuilder: (context, index) {
+              return SizedBox(
+                width: MediaQuery.of(context).size.width * 0.85,
+                child: AttendeeTicketCard(
+                  attendee: _userTickets[index],
+                  onTap: () => _showTicketDetails(_userTickets[index]),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
 
-//   const TicketCard({super.key, required this.eventData, required this.userId});
+  Widget _buildEmptyState() {
+    return Container(
+      height: 200,
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.grey.shade50,
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.confirmation_number_outlined,
+              size: 48,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Tickets Yet',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Register for events to see your tickets here',
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => Navigator.pushNamed(context, '/tickets'),
+              child: Text(
+                'View Tickets',
+                style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     double width = MediaQuery.of(context).size.width * 0.8;
-//     double dotWidth = 6;
-//     double spacing = 6;
-//     int numberOfDots = (width / (dotWidth + spacing)).floor();
-//     numberOfDots = numberOfDots.clamp(0, 100); // safety
+  void _showTicketDetails(Attendee attendee) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _TicketDetailsModal(attendee: attendee),
+    );
+  }
+}
 
-//     final formattedDate =
-//         "${eventData.startTime.day}/${eventData.startTime.month}/${eventData.startTime.year}";
-//     final formattedTime =
-//         "${eventData.startTime.hour}:${eventData.startTime.minute.toString().padLeft(2, '0')}";
+class _TicketDetailsModal extends StatelessWidget {
+  final Attendee attendee;
 
-//     return ClipRRect(
-//       borderRadius: BorderRadius.circular(16),
-//       child: Container(
-//         height: 300,
-//         width: width,
-//         decoration: BoxDecoration(
-//           color: Colors.white,
-//           boxShadow: const [
-//             BoxShadow(
-//               color: Colors.black12,
-//               blurRadius: 4,
-//               offset: Offset(2, 2),
-//             ),
-//           ],
-//         ),
-//         child: Column(
-//           children: [
-//             // Top section with event info
-//             Expanded(
-//               flex: 1,
-//               child: Container(
-//                 padding: const EdgeInsets.all(16),
-//                 width: double.infinity,
-//                 color: Theme.of(context).colorScheme.secondaryContainer,
-//                 child: SingleChildScrollView(
-//                   child: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       Text(
-//                         eventData.title,
-//                         style: TextStyle(
-//                           fontSize: 22,
-//                           fontWeight: FontWeight.bold,
-//                           color: Theme.of(
-//                             context,
-//                           ).colorScheme.onSecondaryContainer,
-//                         ),
-//                         overflow: TextOverflow.fade,
-//                         softWrap: true,
-//                       ),
-//                       const SizedBox(height: 8),
-//                       Text('Date: $formattedDate'),
-//                       Text('Time: $formattedTime'),
-//                       const SizedBox(height: 8),
-//                       Text('Location: ${eventData.location}'),
-//                     ],
-//                   ),
-//                 ),
-//               ),
-//             ),
+  const _TicketDetailsModal({required this.attendee});
 
-//             // Dotted line separator
-//             Container(
-//               height: 1,
-//               margin: const EdgeInsets.symmetric(vertical: 0),
-//               child: Row(
-//                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                 children: List.generate(
-//                   numberOfDots,
-//                   (_) =>
-//                       Container(width: dotWidth, height: 1, color: Colors.grey),
-//                 ),
-//               ),
-//             ),
+  @override
+  Widget build(BuildContext context) {
+    final event = attendee.event;
+    final ticket = attendee.ticket;
 
-//             // Bottom section with QR code
-//             Expanded(
-//               flex: 1,
-//               child: Container(
-//                 width: double.infinity,
-//                 color: Colors.grey[200],
-//                 child: Center(
-//                   child: QrImageView(
-//                     data: 'event_${eventData.id}_user_$userId',
-//                     size: 120,
-//                     errorCorrectionLevel: QrErrorCorrectLevel.Q,
-//                     backgroundColor: Theme.of(
-//                       context,
-//                     ).colorScheme.secondaryContainer,
-//                   ),
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+    if (event == null || ticket == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Ticket Details',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+          
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: AttendeeTicketCard(attendee: attendee),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

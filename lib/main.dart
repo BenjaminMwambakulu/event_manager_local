@@ -5,6 +5,7 @@ import 'package:event_manager_local/screens/Auth/signup.dart';
 import 'package:event_manager_local/screens/auth_wrapper.dart';
 import 'package:event_manager_local/screens/main_home.dart';
 import 'package:event_manager_local/screens/Home/event_details.dart';
+import 'package:event_manager_local/screens/tickets_screen.dart';
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:event_manager_local/themedata.dart';
 
@@ -47,6 +48,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (context) => const LoginPage());
           case '/signup':
             return MaterialPageRoute(builder: (context) => const SignupPage());
+          case '/tickets':
+            return MaterialPageRoute(builder: (context) => const TicketsScreen());
           default:
             // Return null to let the default route handling take over
             return null;
