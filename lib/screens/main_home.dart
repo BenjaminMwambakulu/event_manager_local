@@ -1,3 +1,4 @@
+import 'package:event_manager_local/screens/Explore/expolore_screen.dart';
 import 'package:event_manager_local/screens/Search/search_screen.dart';
 import 'package:flutter/material.dart';
 // import 'package:supabase_flutter/supabase_flutter.dart';
@@ -17,24 +18,9 @@ class _MainHomeState extends State<MainHome> {
   final List<Widget> _pages = [
     Home(),
     SearchScreen(),
-    Text("Page 3"),
+    ExploreScreen(),
     Text("Page 4"),
   ];
-
-  // Future<void> _signOut() async {
-  //   try {
-  //     await _supabase.auth.signOut();
-  //     if (mounted) {
-  //       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-  //     }
-  //   } catch (e) {
-  //     if (mounted) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text('Logout failed: ${e.toString()}')),
-  //       );
-  //     }
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {

@@ -61,6 +61,8 @@ class Event {
     }
   }
 
+  get category => null;
+
   Map<String, dynamic> toJson() {
     return {
       'title': title,

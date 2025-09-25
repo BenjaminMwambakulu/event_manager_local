@@ -33,6 +33,7 @@ class EventService {
       return events;
     } catch (e) {
       debugPrint("Error fetching events: $e");
+      // Return empty list instead of null to satisfy FutureOr<List<Event>> return type
       return [];
     }
   }
@@ -52,5 +53,3 @@ class EventService {
     }
   }
 }
-
-
