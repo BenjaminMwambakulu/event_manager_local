@@ -9,11 +9,14 @@ class EventListTiles extends StatefulWidget {
     this.title,
     this.limit,
     this.onTap,
+    this.haveMenu = true,
   });
   final List<Event> events;
   final String? title;
   final int? limit;
   final void Function(Event)? onTap;
+  final bool?  haveMenu;
+
 
   @override
   State<EventListTiles> createState() => _EventListTilesState();
