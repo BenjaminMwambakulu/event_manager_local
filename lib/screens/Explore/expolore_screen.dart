@@ -36,7 +36,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Future<List<Event>> _getAllEvents() async {
     try {
       final response = await _eventService.getEvents();
-      return response as List<Event>;
+      return response;
     } catch (e) {
       if (kDebugMode) print('Error fetching events: $e');
       return [];
@@ -62,7 +62,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
     return events.where((event) {
       final matchesCategory =
-          _selectedCategory == null || event.category == _selectedCategory;
+          _selectedCategory == null ||
+          event.categoryIds.contains(_selectedCategory); // use categoryIds
       final matchesSearch =
           query.isEmpty || event.title.toLowerCase().contains(query);
       return matchesCategory && matchesSearch;
@@ -140,8 +141,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   // Build category chips
   Widget _buildCategoryChips(List<CategoryModel> categories) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return SizedBox(
       height: 48,
       child: ListView.separated(
@@ -150,22 +149,40 @@ class _ExploreScreenState extends State<ExploreScreen> {
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final category = categories[index];
-          final isSelected = _selectedCategory == category.name;
 
           return ChoiceChip(
-            label: Text(category.name),
-            selected: isSelected,
-            onSelected: (_) {
+            label: Text(
+              category.name,
+              style: TextStyle(
+                color: _selectedCategory == category.id
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+            selected: _selectedCategory == category.id,
+            onSelected: (selected) {
               setState(() {
-                _selectedCategory = isSelected ? null : category.name; // toggle
+                _selectedCategory = selected ? category.id : null;
               });
             },
-            selectedColor: colorScheme.primary.withValues(alpha: 0.2),
-            labelStyle: TextStyle(
-              color: isSelected
-                  ? colorScheme.primary
-                  : colorScheme.onSurface.withValues(alpha: 0.8),
+            backgroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+            selectedColor: Theme.of(context).colorScheme.primary,
+            showCheckmark: false,
+            side: BorderSide(
+              color: _selectedCategory == category.id
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.outline.withValues(alpha: 1),
+              width: 1,
             ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            avatar: _selectedCategory == category.id
+                ? Icon(Icons.check, size: 18, color: Colors.white)
+                : null,
           );
         },
       ),
