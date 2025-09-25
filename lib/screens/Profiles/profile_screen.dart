@@ -1,4 +1,5 @@
 import 'package:event_manager_local/screens/Profiles/build_profile_row.dart';
+import 'package:event_manager_local/screens/Profiles/simple_dash.dart';
 import 'package:event_manager_local/services/profile_service.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -23,14 +24,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     getProfile();
   }
 
-  // Get the user profile information 
-  void getProfile() async{
+  // Get the user profile information
+  void getProfile() async {
     final user = await _profileService.getProfile();
     setState(() {
       _profile = user;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -52,9 +52,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _profile == null 
-              ? Center(child: CircularProgressIndicator()) 
-              : buildProfileRow(_profile!),
+            _profile == null
+                ? Center(child: CircularProgressIndicator())
+                : buildProfileRow(_profile!),
+            SimpleDash(),
           ],
         ),
       ),
