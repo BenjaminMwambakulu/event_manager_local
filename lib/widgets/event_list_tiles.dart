@@ -10,13 +10,16 @@ class EventListTiles extends StatefulWidget {
     this.limit,
     this.onTap,
     this.haveMenu = true,
+    this.onEdit,
+    this.onDelete,
   });
   final List<Event> events;
   final String? title;
   final int? limit;
   final void Function(Event)? onTap;
-  final bool?  haveMenu;
-
+  final bool? haveMenu;
+  final void Function(Event)? onEdit;
+  final void Function(Event)? onDelete;
 
   @override
   State<EventListTiles> createState() => _EventListTilesState();
@@ -94,7 +97,9 @@ class _EventListTilesState extends State<EventListTiles> {
                         color: Colors.transparent,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(16),
-                          onTap: widget.onTap != null ? () => widget.onTap!(event) : null,
+                          onTap: widget.onTap != null
+                              ? () => widget.onTap!(event)
+                              : null,
                           child: Padding(
                             padding: const EdgeInsets.all(12.0),
                             child: Row(
@@ -106,16 +111,17 @@ class _EventListTilesState extends State<EventListTiles> {
                                   width: 80,
                                   height: 80,
                                   fit: BoxFit.cover,
-                                  errorWidget: (context, url, error) => Container(
-                                    width: 80,
-                                    height: 80,
-                                    color: Colors.grey.shade200,
-                                    child: Icon(
-                                      Icons.event,
-                                      color: Colors.grey.shade400,
-                                      size: 32,
-                                    ),
-                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      Container(
+                                        width: 80,
+                                        height: 80,
+                                        color: Colors.grey.shade200,
+                                        child: Icon(
+                                          Icons.event,
+                                          color: Colors.grey.shade400,
+                                          size: 32,
+                                        ),
+                                      ),
                                 ),
                                 const SizedBox(width: 16),
                                 // Event Details
@@ -192,6 +198,56 @@ class _EventListTilesState extends State<EventListTiles> {
                                     ],
                                   ),
                                 ),
+                                if (widget.haveMenu == true)
+                                  PopupMenuButton<String>(
+                                    onSelected: (String result) {
+                                      if (result == 'edit' &&
+                                          widget.onEdit != null) {
+                                        widget.onEdit!(event);
+                                      } else if (result == 'delete' &&
+                                          widget.onDelete != null) {
+                                        widget.onDelete!(event);
+                                      }
+                                    },
+                                    itemBuilder: (BuildContext context) =>
+                                        <PopupMenuEntry<String>>[
+                                          const PopupMenuItem<String>(
+                                            value: 'edit',
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.edit,
+                                                  color: Colors.black54,
+                                                ),
+                                                Text(
+                                                  'Edit',
+                                                  style: TextStyle(
+                                                    color: Colors.black54,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const PopupMenuItem<String>(
+                                            value: 'delete',
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.delete,
+                                                  color: Colors.red,
+                                                ),
+                                                Text(
+                                                  'Delete',
+                                                  style: TextStyle(
+                                                    color: Colors.red,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                    icon: const Icon(Icons.more_vert),
+                                  ),
                               ],
                             ),
                           ),

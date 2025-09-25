@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -22,10 +23,12 @@ class _HomeState extends State<Home> {
   List<Event> events = [];
   List<Event> featuredEvents = [];
   List<Event> upcomingEvents = [];
+  Timer? _timer;
 
   @override
   void dispose() {
-    // Any necessary cleanup can be done here
+    // Cancel the timer to prevent calling setState after dispose
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -41,40 +44,65 @@ class _HomeState extends State<Home> {
 
   void getEvents() async {
     final EventService eventService = EventService();
-    final List<Event> events = await eventService.getEvents();
-    setState(() {
-      this.events = events;
-    });
+    try {
+      final List<Event> events = await eventService.getEvents();
+      // Check if the widget is still mounted before setting state
+      if (mounted) {
+        setState(() {
+          this.events = events;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching events: $e');
+      }
+    }
   }
 
   void getFeaturedEvents() async {
     final EventService eventService = EventService();
-    final List<Event> allEvents = await eventService.getEvents();
-    if (kDebugMode) {
-      print('Total events fetched: ${allEvents.length}');
-    }
-
-    final List<Event> featuredEvents = allEvents
-        .where((event) => event.isFeatured)
-        .toList();
-
-    final List<Event> upcomingEvents = allEvents
-        .where((event) => event.startDateTime.isAfter(DateTime.now()))
-        .toList();
-
-    if (kDebugMode) {
-      print('Featured events found: ${featuredEvents.length}');
-      print('Upcoming events found: ${upcomingEvents.length}');
-    }
-    for (var event in allEvents) {
+    try {
+      final List<Event> allEvents = await eventService.getEvents();
       if (kDebugMode) {
-        print('Event: ${event.title}, isFeatured: ${event.isFeatured}');
+        print('Total events fetched: ${allEvents.length}');
+      }
+
+      final List<Event> featuredEvents = allEvents
+          .where((event) => event.isFeatured)
+          .toList();
+
+      final List<Event> upcomingEvents = allEvents
+          .where((event) => event.startDateTime.isAfter(DateTime.now()))
+          .toList();
+
+      if (kDebugMode) {
+        print('Featured events found: ${featuredEvents.length}');
+        print('Upcoming events found: ${upcomingEvents.length}');
+      }
+      for (var event in allEvents) {
+        if (kDebugMode) {
+          print('Event: ${event.title}, isFeatured: ${event.isFeatured}');
+        }
+      }
+
+      // Check if the widget is still mounted before setting state
+      if (mounted) {
+        setState(() {
+          this.featuredEvents = featuredEvents;
+          this.upcomingEvents = upcomingEvents;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching featured events: $e');
       }
     }
+  }
 
-    setState(() {
-      this.featuredEvents = featuredEvents;
-      this.upcomingEvents = upcomingEvents;
+  void _startPeriodicRefresh() {
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      getFeaturedEvents();
+      getEvents();
     });
   }
 
@@ -83,6 +111,7 @@ class _HomeState extends State<Home> {
     super.initState();
     getUserInfo();
     getFeaturedEvents();
+    _startPeriodicRefresh();
   }
 
   Future<void> _signOut() async {
@@ -98,8 +127,6 @@ class _HomeState extends State<Home> {
       }
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {

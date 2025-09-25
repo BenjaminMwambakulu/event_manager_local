@@ -1,4 +1,5 @@
 import 'package:event_manager_local/screens/Profiles/build_profile_row.dart';
+import 'package:event_manager_local/screens/Profiles/organiser_event_list.dart';
 import 'package:event_manager_local/screens/Profiles/simple_dash.dart';
 import 'package:event_manager_local/services/profile_service.dart';
 import 'package:flutter/material.dart';
@@ -56,6 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ? Center(child: CircularProgressIndicator())
                 : buildProfileRow(_profile!),
             SimpleDash(),
+            OrganiserEventList(),
           ],
         ),
       ),
