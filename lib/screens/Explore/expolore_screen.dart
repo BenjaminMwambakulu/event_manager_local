@@ -2,6 +2,7 @@ import 'package:event_manager_local/models/category_model.dart';
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:event_manager_local/services/event_service.dart';
 import 'package:event_manager_local/widgets/event_list_tiles.dart';
+import 'package:event_manager_local/widgets/featured_courasel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -15,339 +16,306 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   final SupabaseClient _supabase = Supabase.instance.client;
-  final EventService _eventService = EventService();
-  late Future<List<CategoryModel>> _categoriesFuture;
-  late Future<List<Event>> _eventsFuture;
-  String? _selectedCategory;
+
+  // Controllers and states
   final TextEditingController _searchController = TextEditingController();
+  String? _selectedCategory;
+
+  late Future<List<Event>> _eventsFuture;
+  late Future<List<CategoryModel>> _categoriesFuture;
+  final EventService _eventService = EventService();
 
   @override
   void initState() {
     super.initState();
-    _categoriesFuture = _getAllCategories();
     _eventsFuture = _getAllEvents();
+    _categoriesFuture = _getAllCategories();
   }
 
-  Future<List<CategoryModel>> _getAllCategories() async {
-    try {
-      final response = await _supabase.from('categories').select('*');
-      final convertedCategories = (response as List)
-          .map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))
-          .toList();
-      return convertedCategories;
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching categories: $e');
-      }
-      rethrow;
-    }
-  }
-
+  // Fetch events from Supabase
   Future<List<Event>> _getAllEvents() async {
     try {
       final response = await _eventService.getEvents();
-      return response;
+      return response as List<Event>;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching events: $e');
-      }
-      rethrow;
+      if (kDebugMode) print('Error fetching events: $e');
+      return [];
     }
   }
 
-  void _refreshEvents() {
+  // Fetch categories
+  Future<List<CategoryModel>> _getAllCategories() async {
+    try {
+      final response = await _supabase.from('categories').select('*');
+      return (response as List)
+          .map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      if (kDebugMode) print('Error fetching categories: $e');
+      return [];
+    }
+  }
+
+  // Filter by category + search
+  List<Event> _filterEvents(List<Event> events) {
+    final query = _searchController.text.trim().toLowerCase();
+
+    return events.where((event) {
+      final matchesCategory =
+          _selectedCategory == null || event.category == _selectedCategory;
+      final matchesSearch =
+          query.isEmpty || event.title.toLowerCase().contains(query);
+      return matchesCategory && matchesSearch;
+    }).toList();
+  }
+
+  // Get only featured events
+  Future<List<Event>> _getFeaturedEvents() async {
+    try {
+      // Reuse your event service
+      final allEvents = await _eventService.getEvents();
+
+      // Filter only featured ones
+      return allEvents.where((event) => event.isFeatured).toList();
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error fetching featured events: $e");
+      }
+      return [];
+    }
+  }
+
+  // Refresh handler
+  Future<void> _refreshEvents() async {
     setState(() {
       _eventsFuture = _getAllEvents();
+      _categoriesFuture = _getAllCategories();
     });
   }
 
-  void _filterByCategory(String? category) {
-    setState(() {
-      _selectedCategory = category;
-    });
+  // Build empty states
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    String? message,
+    VoidCallback? onAction,
+    String actionLabel = 'Show all events',
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 64,
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+          if (message != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: TextStyle(
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+          if (onAction != null) ...[
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: onAction, child: Text(actionLabel)),
+          ],
+        ],
+      ),
+    );
   }
 
-  List<Event> _filterEvents(List<Event> events) {
-    if (_selectedCategory == null) return events;
-    return events.where((event) => event.category == _selectedCategory).toList();
+  // Build category chips
+  Widget _buildCategoryChips(List<CategoryModel> categories) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          final isSelected = _selectedCategory == category.name;
+
+          return ChoiceChip(
+            label: Text(category.name),
+            selected: isSelected,
+            onSelected: (_) {
+              setState(() {
+                _selectedCategory = isSelected ? null : category.name; // toggle
+              });
+            },
+            selectedColor: colorScheme.primary.withValues(alpha: 0.2),
+            labelStyle: TextStyle(
+              color: isSelected
+                  ? colorScheme.primary
+                  : colorScheme.onSurface.withValues(alpha: 0.8),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         title: const Row(
-          children: [
-            Icon(Icons.explore_outlined),
-            SizedBox(width: 12),
-            Text(
-              'Explore Events',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 20,
-              ),
-            ),
-          ],
+          children: [Icon(Icons.explore), SizedBox(width: 8), Text('Explore')],
         ),
-        backgroundColor: colorScheme.surface,
-        elevation: 1,
       ),
       body: RefreshIndicator(
-        onRefresh: () async {
-          _refreshEvents();
-          await _eventsFuture;
-        },
+        onRefresh: _refreshEvents,
         child: CustomScrollView(
           slivers: [
-            // Search Section
+            // Search bar
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.onPrimaryContainer.withValues( alpha :0.3),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search events...',
-                      prefixIcon: Icon(Icons.search, color: colorScheme.onSurface.withValues( alpha :0.6)),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
+                    hintText: 'Search events...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
                     ),
-                    onChanged: (value) {
-                      // Implement search functionality
-                    },
                   ),
+                  onChanged: (_) => setState(() {}),
                 ),
               ),
             ),
 
-            // Categories Section
+            // Category chips
             SliverToBoxAdapter(
               child: FutureBuilder<List<CategoryModel>>(
                 future: _categoriesFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(child: CircularProgressIndicator()),
+                      padding: EdgeInsets.all(16),
+                      child: LinearProgressIndicator(),
                     );
                   }
-
                   if (snapshot.hasError) {
-                    return _buildErrorSection(
-                      'Failed to load categories',
-                      onRetry: () {
-                        setState(() {
-                          _categoriesFuture = _getAllCategories();
-                        });
-                      },
+                    return _buildEmptyState(
+                      icon: Icons.error_outline,
+                      title: 'Failed to load categories',
+                      message: 'Please try again later.',
+                      onAction: _refreshEvents,
+                      actionLabel: 'Retry',
                     );
                   }
-
                   if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const SizedBox.shrink();
+                    return _buildEmptyState(
+                      icon: Icons.category_outlined,
+                      title: 'No categories available',
+                    );
                   }
-
-                  final categories = snapshot.data!;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'Categories',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 50,
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: categories.length + 1, // +1 for "All" category
-                          separatorBuilder: (context, index) => const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            if (index == 0) {
-                              return _buildCategoryChip(
-                                'All',
-                                isSelected: _selectedCategory == null,
-                                onTap: () => _filterByCategory(null),
-                              );
-                            }
-                            final category = categories[index - 1];
-                            return _buildCategoryChip(
-                              category.name,
-                              isSelected: _selectedCategory == category.name,
-                              onTap: () => _filterByCategory(category.name),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildCategoryChips(snapshot.data!),
                   );
                 },
               ),
             ),
 
-            // Events Section Header
+            // Featured events
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Upcoming Events',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    if (_selectedCategory != null)
-                      GestureDetector(
-                        onTap: () => _filterByCategory(null),
-                        child: Text(
-                          'Clear filter',
-                          style: TextStyle(
-                            color: colorScheme.primary,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+              child: FutureBuilder<List<Event>>(
+                future: _getFeaturedEvents(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: LinearProgressIndicator(),
+                    );
+                  }
+                  if (snapshot.hasError) {
+                    return const SizedBox.shrink();
+                  }
+                  final featuredEvents = snapshot.data ?? [];
+                  return FeaturedCarousel(featuredEvents);
+                },
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-            // Events List
+            // Events list
+            SliverToBoxAdapter(child: SizedBox(height: 30)),
             FutureBuilder<List<Event>>(
               future: _eventsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Loading events...'),
-                        ],
-                      ),
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(child: CircularProgressIndicator()),
                     ),
                   );
                 }
-
                 if (snapshot.hasError) {
-                  return SliverFillRemaining(
-                    child: _buildErrorSection(
-                      'Failed to load events',
-                      onRetry: _refreshEvents,
+                  return SliverToBoxAdapter(
+                    child: _buildEmptyState(
+                      icon: Icons.error_outline,
+                      title: 'Failed to load events',
+                      message: 'Please check your connection and try again.',
+                      onAction: _refreshEvents,
+                      actionLabel: 'Retry',
                     ),
                   );
                 }
+                final events = snapshot.data ?? [];
+                final filteredEvents = _filterEvents(events);
 
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.event_busy_outlined,
-                            size: 64,
-                            color: colorScheme.onSurface.withValues( alpha :0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No events found',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: colorScheme.onSurface.withValues( alpha :0.7),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _selectedCategory != null 
-                                ? 'Try changing the category filter'
-                                : 'Check back later for new events',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: colorScheme.onSurface.withValues( alpha :0.5),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                final events = _filterEvents(snapshot.data!);
-                
-                if (events.isEmpty) {
-                  return SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.filter_alt_outlined,
-                            size: 64,
-                            color: colorScheme.onSurface.withValues( alpha :0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No events in this category',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: colorScheme.onSurface.withValues( alpha :0.7),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () => _filterByCategory(null),
-                            child: const Text('Show all events'),
-                          ),
-                        ],
-                      ),
+                if (filteredEvents.isEmpty) {
+                  return SliverToBoxAdapter(
+                    child: _buildEmptyState(
+                      icon: Icons.event_busy,
+                      title: 'No events found',
+                      message: _selectedCategory != null
+                          ? 'No events match your selected category.'
+                          : 'Try a different search.',
+                      onAction: () {
+                        setState(() {
+                          _selectedCategory = null;
+                          _searchController.clear();
+                        });
+                      },
+                      actionLabel: 'Clear filters',
                     ),
                   );
                 }
 
                 return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final event = events[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: EventListTiles(
-                          events: [event],
-                          onTap: (event) {
-                            Navigator.pushNamed(
-                              context,
-                              "/event_details",
-                              arguments: event,
-                            );
-                          },
-                        ),
-                      );
-                    },
-                    childCount: events.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final event = filteredEvents[index];
+                    return EventListTiles(
+                      events: [event], // If EventListTiles expects a list
+                      onTap: (event) {
+                        Navigator.pushNamed(
+                          context,
+                          "/event_details",
+                          arguments: event,
+                        );
+                      },
+                    );
+                  }, childCount: filteredEvents.length),
                 );
               },
             ),
@@ -355,75 +323,5 @@ class _ExploreScreenState extends State<ExploreScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildCategoryChip(
-    String category, {
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    
-    return FilterChip(
-      label: Text(
-        category,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
-        ),
-      ),
-      selected: isSelected,
-      onSelected: (_) => onTap(),
-      backgroundColor: theme.colorScheme.surfaceVariant.withValues( alpha :0.3),
-      selectedColor: theme.colorScheme.primary,
-      checkmarkColor: theme.colorScheme.onPrimary,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues( alpha :0.3),
-          width: 1,
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      showCheckmark: true,
-    );
-  }
-
-  Widget _buildErrorSection(String message, {required VoidCallback onRetry}) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 48,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 16,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Try Again'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 }
