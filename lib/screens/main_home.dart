@@ -1,4 +1,5 @@
 import 'package:event_manager_local/screens/Explore/expolore_screen.dart';
+import 'package:event_manager_local/screens/Profiles/profile_screen.dart'; // Updated import path
 import 'package:event_manager_local/screens/Search/search_screen.dart';
 import 'package:flutter/material.dart';
 // import 'package:supabase_flutter/supabase_flutter.dart';
@@ -19,7 +20,7 @@ class _MainHomeState extends State<MainHome> {
     Home(),
     SearchScreen(),
     ExploreScreen(),
-    Text("Page 4"),
+    ProfileScreen(), // Using ProfileScreen instead of Profile
   ];
 
   @override
