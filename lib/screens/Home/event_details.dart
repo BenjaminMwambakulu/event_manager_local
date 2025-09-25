@@ -2,9 +2,9 @@ import 'package:event_manager_local/widgets/full_width_button.dart';
 import 'package:event_manager_local/widgets/ticket_selector.dart';
 import 'package:event_manager_local/services/registration_service.dart';
 import 'package:event_manager_local/models/ticket.dart';
+import 'package:event_manager_local/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:event_manager_local/models/event_model.dart';
-import 'package:flutter/services.dart'; // Needed for image error handling
 import 'package:cached_network_image/cached_network_image.dart';
 
 class EventDetails extends StatefulWidget {
@@ -190,17 +190,14 @@ class _EventDetailsState extends State<EventDetails> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        widget.event.organiser.profileUrl.isNotEmpty
-                            ? CircleAvatar(
-                                backgroundImage: CachedNetworkImageProvider(widget.event.organiser.profileUrl),
-                                child: widget.event.organiser.profileUrl.isEmpty
-                                    ? Icon(Icons.person, color: Colors.grey[600])
-                                    : null,
-                              )
-                            : CircleAvatar(
-                                backgroundColor: Colors.grey.shade200,
-                                child: Icon(Icons.person, color: Colors.grey.shade400),
-                              ),
+                        CircleAvatar(
+                          backgroundImage: widget.event.organiser.profileUrl.isNotEmpty
+                              ? ImageUtils.cachedNetworkImageProvider(widget.event.organiser.profileUrl)
+                              : null,
+                          child: widget.event.organiser.profileUrl.isEmpty
+                              ? Icon(Icons.person, color: Colors.grey[600])
+                              : null,
+                        ),
                         const SizedBox(width: 12),
                         Text(
                           widget.event.organiser.username,

@@ -51,7 +51,6 @@ class MyApp extends StatelessWidget {
           case '/tickets':
             return MaterialPageRoute(builder: (context) => const TicketsScreen());
           default:
-            // Return null to let the default route handling take over
             return null;
         }
       },

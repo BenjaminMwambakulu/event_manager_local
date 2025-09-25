@@ -1,5 +1,6 @@
 import 'package:event_manager_local/models/profile.dart';
 import 'package:event_manager_local/models/ticket.dart';
+import 'package:flutter/foundation.dart';
 
 class Event {
   final String id;
@@ -51,8 +52,11 @@ class Event {
             .toList(),
       );
     } catch (e) {
-      print('Error parsing event: $e');
-      print('JSON data: $json');
+      if (kDebugMode) {
+        print('Error parsing event: $e');
+         print('JSON data: $json');
+      }
+     
       rethrow;
     }
   }

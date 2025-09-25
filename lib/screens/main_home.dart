@@ -1,3 +1,4 @@
+import 'package:event_manager_local/screens/Search/search_screen.dart';
 import 'package:flutter/material.dart';
 // import 'package:supabase_flutter/supabase_flutter.dart';
 import './Home/home.dart';
@@ -15,7 +16,7 @@ class _MainHomeState extends State<MainHome> {
 
   final List<Widget> _pages = [
     Home(),
-    Text("Page 2"),
+    SearchScreen(),
     Text("Page 3"),
     Text("Page 4"),
   ];

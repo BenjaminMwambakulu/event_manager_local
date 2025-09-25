@@ -63,7 +63,7 @@ class _TicketSelectorState extends State<TicketSelector> {
               ),
               borderRadius: BorderRadius.circular(12),
               color: isSelected 
-                  ? Theme.of(context).primaryColor.withOpacity(0.05)
+                  ? Theme.of(context).primaryColor.withValues(alpha:  0.05)
                   : Colors.white,
             ),
             child: Row(
