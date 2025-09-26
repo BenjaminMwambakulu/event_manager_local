@@ -1,6 +1,7 @@
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:event_manager_local/utils/image_utils.dart';
 
 class EventListTiles extends StatefulWidget {
   const EventListTiles({
@@ -107,7 +108,7 @@ class _EventListTilesState extends State<EventListTiles> {
                               children: [
                                 // Event Image
                                 CachedNetworkImage(
-                                  imageUrl: event.bannerUrl,
+                                  imageUrl: ImageUtils.fixImageUrl(event.bannerUrl),
                                   width: 80,
                                   height: 80,
                                   fit: BoxFit.cover,

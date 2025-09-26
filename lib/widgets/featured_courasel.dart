@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:event_manager_local/utils/image_utils.dart';
 
 class FeaturedCarousel extends StatelessWidget {
   final List<Event> featuredEvents;
@@ -71,7 +72,7 @@ class FeaturedCarousel extends StatelessWidget {
                           children: [
                             // Image with fixed height
                             CachedNetworkImage(
-                              imageUrl: event.bannerUrl,
+                              imageUrl: ImageUtils.fixImageUrl(event.bannerUrl),
                               fit: BoxFit.cover,
                               errorWidget: (context, url, error) => Container(
                                 color: Colors.grey.shade300,

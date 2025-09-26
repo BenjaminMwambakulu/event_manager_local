@@ -118,7 +118,7 @@ class _EventDetailsState extends State<EventDetails> {
                 height: 300,
                 child: ClipRRect(
                   child: CachedNetworkImage(
-                    imageUrl: widget.event.bannerUrl,
+                    imageUrl: ImageUtils.fixImageUrl(widget.event.bannerUrl),
                     width: double.infinity,
                     height: 300,
                     fit: BoxFit.cover,

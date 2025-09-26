@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:event_manager_local/models/profile.dart';
 import 'package:event_manager_local/services/profile_service.dart';
+import 'package:event_manager_local/utils/image_utils.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({Key? key}) : super(key: key);
@@ -61,6 +62,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       // Upload new image if picked
       if (_pickedImage != null) {
         final fileName = '${_profile!.id}.jpg';
+        // ignore: unused_local_variable
         final storageResponse = await Supabase.instance.client.storage
             .from('avatars')
             .upload(fileName, _pickedImage!, fileOptions: const FileOptions(upsert: true));
@@ -116,7 +118,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       backgroundImage: _pickedImage != null
                           ? FileImage(_pickedImage!)
                           : (_profile!.profileUrl.isNotEmpty
-                              ? NetworkImage(_profile!.profileUrl)
+                              ? ImageUtils.cachedNetworkImageProvider(_profile!.profileUrl)
                               : const AssetImage('assets/default_avatar.png')) as ImageProvider,
                     ),
                     Positioned(
