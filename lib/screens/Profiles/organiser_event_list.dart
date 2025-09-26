@@ -38,6 +38,25 @@ class _OrganiserEventListState extends State<OrganiserEventList> {
         onRefresh: () async => _refresh(),
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    "My Events",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  Spacer(),
+                  InkWell(
+                    onTap: () {},
+                    child: Text("view all", style: TextStyle(fontSize: 16)),
+                  ),
+                ],
+              ),
+            ),
             EventListTiles(events: _events, onTap: (event) {}, haveMenu: true),
           ],
         ),

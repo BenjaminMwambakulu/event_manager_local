@@ -1,4 +1,5 @@
 import 'package:event_manager_local/screens/Profiles/build_profile_row.dart';
+import 'package:event_manager_local/screens/Profiles/edit_profile.dart';
 import 'package:event_manager_local/screens/Profiles/organiser_event_list.dart';
 import 'package:event_manager_local/screens/Profiles/simple_dash.dart';
 import 'package:event_manager_local/services/profile_service.dart';
@@ -41,7 +42,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [Icon(Icons.person), SizedBox(width: 8), Text('Profile')],
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.edit)),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => EditProfilePage()),
+              );
+            },
+            icon: Icon(Icons.edit),
+          ),
           IconButton(
             onPressed: () {
               _supabase.auth.signOut();

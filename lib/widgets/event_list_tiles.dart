@@ -9,7 +9,7 @@ class EventListTiles extends StatefulWidget {
     this.title,
     this.limit,
     this.onTap,
-    this.haveMenu = true,
+    this.haveMenu = false,
     this.onEdit,
     this.onDelete,
   });
