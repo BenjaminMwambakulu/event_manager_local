@@ -43,11 +43,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => EditProfilePage()),
               );
+              // Refresh profile data when returning from EditProfilePage
+              if (result == true) {
+                getProfile();
+              }
             },
             icon: Icon(Icons.edit),
           ),
