@@ -1,4 +1,5 @@
 import 'package:event_manager_local/models/event_model.dart';
+import 'package:event_manager_local/screens/Profiles/organiser_all_events.dart';
 import 'package:event_manager_local/services/organiser_service.dart';
 import 'package:event_manager_local/widgets/event_list_tiles.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +52,14 @@ class _OrganiserEventListState extends State<OrganiserEventList> {
                   ),
                   Spacer(),
                   InkWell(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OrganiserAllEvents(),
+                        ),
+                      );
+                    },
                     child: Text("view all", style: TextStyle(fontSize: 16)),
                   ),
                 ],
