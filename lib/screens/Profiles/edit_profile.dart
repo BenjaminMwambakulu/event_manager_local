@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:event_manager_local/models/profile.dart';
 import 'package:event_manager_local/services/profile_service.dart';
 import 'package:event_manager_local/utils/image_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -79,7 +80,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             .getPublicUrl(fileName);
       }
 
-      // Update profile table
+      // Update profiles table
       await Supabase.instance.client
           .from('profiles')
           .update({
@@ -90,13 +91,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
           })
           .eq('id', _profile!.id);
 
-      // Update password if provided
-      if (_passwordController.text.isNotEmpty &&
-          _passwordController.text == _confirmPasswordController.text) {
-        await Supabase.instance.client.auth.updateUser(
-          UserAttributes(password: _passwordController.text),
-        );
-      }
+      // Update Supabase Auth user (username in metadata, password if provided)
+      final userAttributes = UserAttributes(
+        data: {'username': _usernameController.text},
+        password:
+            _passwordController.text.isNotEmpty &&
+                _passwordController.text == _confirmPasswordController.text
+            ? _passwordController.text
+            : null,
+      );
+      await Supabase.instance.client.auth.updateUser(userAttributes);
+
+      // Save new username in SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('username', _usernameController.text);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -152,7 +160,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.black.withValues(alpha: 0.5),
+                          color: Colors.black.withOpacity(0.5),
                         ),
                         child: IconButton(
                           color: Colors.white,
