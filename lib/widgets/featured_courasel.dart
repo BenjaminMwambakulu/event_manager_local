@@ -123,11 +123,15 @@ class FeaturedCarousel extends StatelessWidget {
                                             fontSize: 14,
                                           ),
                                         ),
-                                        Text(
-                                          event.location,
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 14,
+                                        Expanded(
+                                          child: Text(
+                                            event.location,
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 14,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.end,
                                           ),
                                         ),
                                       ],

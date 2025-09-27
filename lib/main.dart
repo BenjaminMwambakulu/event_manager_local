@@ -14,9 +14,9 @@ void main() async {
 
   // Initialize Supabase with your local instance
   await Supabase.initialize(
-    url: 'http://10.0.2.2:8000',
+    url: 'https://nhjtarucvmudvygklrma.supabase.co',
     anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oanRhcnVjdm11ZHZ5Z2tscm1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg5OTU3OTUsImV4cCI6MjA3NDU3MTc5NX0.Ss4N_VCkrrAqyePOt9ibVl_r6R0nGRURj5j_CpdOr_A',
     debug: true,
   );
 
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
             builder: (context) => EventDetails(event: event),
           );
         }
-        
+
         // Handle other named routes
         switch (settings.name) {
           case '/home':
@@ -49,7 +49,9 @@ class MyApp extends StatelessWidget {
           case '/signup':
             return MaterialPageRoute(builder: (context) => const SignupPage());
           case '/tickets':
-            return MaterialPageRoute(builder: (context) => const TicketsScreen());
+            return MaterialPageRoute(
+              builder: (context) => const TicketsScreen(),
+            );
           default:
             return null;
         }

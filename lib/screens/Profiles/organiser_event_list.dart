@@ -3,6 +3,7 @@ import 'package:event_manager_local/screens/Profiles/organiser_all_events.dart';
 import 'package:event_manager_local/services/organiser_service.dart';
 import 'package:event_manager_local/widgets/event_list_tiles.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OrganiserEventList extends StatefulWidget {
   const OrganiserEventList({super.key});
@@ -13,7 +14,22 @@ class OrganiserEventList extends StatefulWidget {
 
 class _OrganiserEventListState extends State<OrganiserEventList> {
   List<Event> _events = [];
+  final SupabaseClient _supabase = Supabase.instance.client;
+  final userID = Supabase.instance.client.auth.currentUser?.id;
+  String? organiserID;
 
+  Future<void> fetchProfileID() async {
+    if (userID == null) return;
+    final profile = await _supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', userID!)
+        .single();
+    setState(() {
+      organiserID = profile['id'];
+    });
+  }
+  
   void _fetchEvents() async {
     final eventsData = await OrganiserService().getOrganiserEvents();
     final events = eventsData.map((e) => Event.fromJson(e)).toList();
@@ -52,13 +68,20 @@ class _OrganiserEventListState extends State<OrganiserEventList> {
                   ),
                   Spacer(),
                   InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => OrganiserAllEvents(),
-                        ),
-                      );
+                    onTap: () async {
+                      await fetchProfileID();
+                      if (organiserID != null) {
+                        if (mounted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EventManagementPage(
+                                organiserId: organiserID!,
+                              ),
+                            ),
+                          );
+                        }
+                      }
                     },
                     child: Text("view all", style: TextStyle(fontSize: 16)),
                   ),

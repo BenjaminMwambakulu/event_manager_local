@@ -1,202 +1,128 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:event_manager_local/models/event_model.dart';
-import 'package:event_manager_local/utils/image_utils.dart';
 
-class OrganiserAllEvents extends StatefulWidget {
-  const OrganiserAllEvents({super.key});
+class EventManagementPage extends StatefulWidget {
+  final String organiserId; 
+
+  const EventManagementPage({super.key, required this.organiserId});
 
   @override
-  State<OrganiserAllEvents> createState() => _OrganiserAllEventsState();
+  State<EventManagementPage> createState() => _EventManagementPageState();
 }
 
-class _OrganiserAllEventsState extends State<OrganiserAllEvents> {
-  final _supabase = Supabase.instance.client;
-  List<Event> _events = [];
-  bool _loading = false;
+class _EventManagementPageState extends State<EventManagementPage> {
+  final supabase = Supabase.instance.client;
+  List<Map<String, dynamic>> events = [];
+  bool loading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchEvents();
+    _loadEvents();
   }
 
-  Future<void> _fetchEvents() async {
-    setState(() => _loading = true);
+  Future<void> _loadEvents() async {
+    setState(() => loading = true);
 
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("User not authenticated")),
-          );
-        }
-        return;
-      }
+    // Step 1: Fetch events by organiser
+    final response = await supabase
+        .from('events')
+        .select()
+        .eq('organiser_id', widget.organiserId);
 
-      final response = await _supabase
-          .from('events')
-          .select('*, profiles(*), tickets(*), event_categories(category_id)')
-          .eq('organiser_id', user.id)
-          .order('created_at', ascending: false);
+    final data = response as List<dynamic>;
+    events = [];
 
-      final events = response.map((json) => Event.fromJson(json)).toList();
-      setState(() => _events = events);
-    // ignore: dead_code
-        } on PostgrestException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Database error: ${e.message}")),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error loading events: $e")),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
+    // Step 2: For each event, fetch other data separately
+    for (var e in data) {
+      final eventId = e['id'];
 
-  Future<void> _deleteEvent(String eventId) async {
-    try {
-      await _supabase.from('events').delete().eq('id', eventId);
-      setState(() {
-        _events.removeWhere((e) => e.id == eventId);
+      // Tickets
+      final tickets = await supabase
+          .from('tickets')
+          .select()
+          .eq('event_id', eventId);
+
+      // Attendees
+      final attendees = await supabase
+          .from('attendee')
+          .select()
+          .eq('event_id', eventId);
+
+      // Payments
+      final payments = await supabase
+          .from('payment')
+          .select()
+          .eq('event_id', eventId);
+
+      // Categories (via event_categories)
+      final eventCategories = await supabase
+          .from('event_categories')
+          .select()
+          .eq('event_id', eventId);
+
+      // Ratings (via event_rating)
+      final eventRatings = await supabase
+          .from('event_rating')
+          .select()
+          .eq('event_id', eventId);
+
+      events.add({
+        'event': e,
+        'tickets': tickets,
+        'attendees': attendees,
+        'payments': payments,
+        'categories': eventCategories,
+        'ratings': eventRatings,
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Event deleted")),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Delete failed: $e")),
-        );
-      }
     }
+
+    setState(() => loading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('All Events')),
-      body: _loading
+      appBar: AppBar(title: const Text("Organiser Event Management")),
+      body: loading
           ? const Center(child: CircularProgressIndicator())
-          : _events.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("No events found"),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _fetchEvents,
-                        child: const Text("Refresh"),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: _events.length,
-                  itemBuilder: (context, index) =>
-                      _buildEventCard(_events[index]),
-                ),
-    );
-  }
+          : ListView.builder(
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                final e = events[index];
+                final event = e['event'];
+                final tickets = e['tickets'] as List;
+                final attendees = e['attendees'] as List;
+                final payments = e['payments'] as List;
 
-  Widget _buildEventCard(Event event) {
-    final minPrice = event.tickets.isNotEmpty
-        ? event.tickets.map((t) => t.price).reduce((a, b) => a < b ? a : b)
-        : 0.0;
-    final maxPrice = event.tickets.isNotEmpty
-        ? event.tickets.map((t) => t.price).reduce((a, b) => a > b ? a : b)
-        : 0.0;
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Banner
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Image(
-              image:
-                  ImageUtils.cachedNetworkImageProvider(event.bannerUrl) ??
-                      const AssetImage('assets/default_banner.png')
-                          as ImageProvider,
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-          ),
-          // Details
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                return Card(
+                  margin: const EdgeInsets.all(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(event['title'] ?? 'Untitled',
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold)),
+                        Text(event['description'] ?? ''),
+                        const SizedBox(height: 8),
+                        Text("Tickets: ${tickets.length}"),
+                        Text("Attendees: ${attendees.length}"),
+                        Text("Payments: ${payments.length}"),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            // TODO: Navigate to detailed event page
+                          },
+                          child: const Text("Manage Event"),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "${event.startDateTime.toLocal()} - ${event.endDateTime.toLocal()}",
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                ),
-                const SizedBox(height: 4),
-                if (event.tickets.isNotEmpty)
-                  Text(
-                    "Tickets: \$$minPrice - \$$maxPrice",
-                    style: const TextStyle(color: Colors.black87),
-                  ),
-                const SizedBox(height: 8),
-                Text(
-                  "Total attendees: (todo)", // placeholder
-                  style: TextStyle(color: Colors.grey[700]),
-                ),
-                Text(
-                  "Total check-ins: (todo)",
-                  style: TextStyle(color: Colors.grey[700]),
-                ),
-                const SizedBox(height: 12),
-                // Actions
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        // TODO: navigate to attendees page
-                      },
-                      child: const Text("View attendees"),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // TODO: navigate to edit event page
-                      },
-                      child: const Text("Edit"),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteEvent(event.id),
-                    ),
-                  ],
-                ),
-              ],
+                );
+              },
             ),
-          ),
-        ],
-      ),
     );
   }
 }
