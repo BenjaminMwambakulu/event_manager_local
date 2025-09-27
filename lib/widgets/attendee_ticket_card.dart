@@ -91,7 +91,7 @@ class AttendeeTicketCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                event.location,
+                                event.location!,
                                 style: TextStyle(
                                   color: Colors.grey[700],
                                   fontSize: 11,

@@ -16,7 +16,7 @@ class _OrganiserEventListState extends State<OrganiserEventList> {
   List<Event> _events = [];
   final SupabaseClient _supabase = Supabase.instance.client;
   final userID = Supabase.instance.client.auth.currentUser?.id;
-  String? organiserID;
+  String? organiserID; //the id is UUID so it is a string
 
   Future<void> fetchProfileID() async {
     if (userID == null) return;

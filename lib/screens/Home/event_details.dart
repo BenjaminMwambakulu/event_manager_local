@@ -151,7 +151,7 @@ class _EventDetailsState extends State<EventDetails> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            widget.event.location,
+                            widget.event.location!,
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
                         ),
@@ -177,7 +177,7 @@ class _EventDetailsState extends State<EventDetails> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.event.description,
+                      widget.event.description ?? '',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),
@@ -191,16 +191,16 @@ class _EventDetailsState extends State<EventDetails> {
                     Row(
                       children: [
                         CircleAvatar(
-                          backgroundImage: widget.event.organiser.profileUrl.isNotEmpty
-                              ? ImageUtils.cachedNetworkImageProvider(widget.event.organiser.profileUrl)
+                          backgroundImage: widget.event.organiser!.profileUrl.isNotEmpty
+                              ? ImageUtils.cachedNetworkImageProvider(widget.event.organiser!.profileUrl)
                               : null,
-                          child: widget.event.organiser.profileUrl.isEmpty
+                          child: widget.event.organiser!.profileUrl.isEmpty
                               ? Icon(Icons.person, color: Colors.grey[600])
                               : null,
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          widget.event.organiser.username,
+                          widget.event.organiser!.username,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],

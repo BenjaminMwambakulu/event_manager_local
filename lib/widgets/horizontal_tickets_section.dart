@@ -1,168 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:event_manager_local/models/event_model.dart';
-import 'package:event_manager_local/models/profile.dart';
-import 'package:event_manager_local/models/ticket.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class HorizontalTicketsSection extends StatelessWidget {
-  const HorizontalTicketsSection({super.key});
-
-  // Sample data for user tickets
-  List<Event> get _sampleUserTickets {
-    return [
-      Event(
-        id: 'evt_001',
-        title: 'Flutter Conference 2024',
-        description: 'Annual Flutter developer conference',
-        location: 'Convention Center, Downtown',
-        bannerUrl: 'https://example.com/banner1.jpg',
-        createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        startDateTime: DateTime.now().add(const Duration(days: 15)),
-        endDateTime: DateTime.now().add(const Duration(days: 15, hours: 8)),
-        isFeatured: true,
-        organiser: Profile(
-          id: 'org_001',
-          username: 'flutter_org',
-          profileUrl: 'https://example.com/profile1.jpg',
-        ),
-        tickets: [
-          Ticket(id: 'tkt_001', type: 'VIP', price: 299.99),
-        ],
-        categoryIds: ['tech'],
-      ),
-      Event(
-        id: 'evt_002',
-        title: 'Tech Meetup',
-        description: 'Monthly tech meetup for developers',
-        location: 'Tech Hub, Silicon Valley',
-        bannerUrl: 'https://example.com/banner2.jpg',
-        createdAt: DateTime.now().subtract(const Duration(days: 20)),
-        startDateTime: DateTime.now().subtract(const Duration(days: 5)),
-        endDateTime: DateTime.now().subtract(const Duration(days: 5, hours: -3)),
-        isFeatured: false,
-        organiser: Profile(
-          id: 'org_002',
-          username: 'tech_hub',
-          profileUrl: 'https://example.com/profile2.jpg',
-        ),
-        tickets: [
-          Ticket(id: 'tkt_002', type: 'General', price: 49.99),
-        ],
-        categoryIds: ['networking'],
-      ),
-      Event(
-        id: 'evt_003',
-        title: 'Design Workshop',
-        description: 'UI/UX design workshop for beginners',
-        location: 'Design Studio, Creative District',
-        bannerUrl: 'https://example.com/banner3.jpg',
-        createdAt: DateTime.now().subtract(const Duration(days: 10)),
-        startDateTime: DateTime.now().add(const Duration(days: 7)),
-        endDateTime: DateTime.now().add(const Duration(days: 7, hours: 6)),
-        isFeatured: false,
-        organiser: Profile(
-          id: 'org_003',
-          username: 'design_studio',
-          profileUrl: 'https://example.com/profile3.jpg',
-        ),
-        tickets: [
-          Ticket(id: 'tkt_003', type: 'Premium', price: 149.99),
-        ],
-        categoryIds: ['design'],
-      ),
-    ];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final userTickets = _sampleUserTickets;
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16.0, bottom: 12.0, top: 8.0),
-          child: Row(
-            children: [
-              Icon(
-                Icons.confirmation_number_outlined,
-                color: Colors.blue.shade700,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                "My Tickets",
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade700,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  "${userTickets.length}",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 200,
-          child: userTickets.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.confirmation_number_outlined,
-                          size: 48,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No tickets available',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: userTickets.map((event) {
-                      return Container(
-                        width: 280,
-                        margin: const EdgeInsets.only(right: 16),
-                        child: TicketCard(event: event),
-                      );
-                    }).toList(),
-                  ),
-                ),
-        ),
-      ],
-    );
-  }
-}
 
 class TicketCard extends StatelessWidget {
   final Event event;
@@ -324,7 +164,7 @@ class TicketCard extends StatelessWidget {
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
-                                  event.location,
+                                  event.location!,
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         fontSize: 12,
@@ -427,7 +267,7 @@ class TicketCard extends StatelessWidget {
                 _buildDetailRow('Type:', ticketType),
                 _buildDetailRow('Price:', '\$${ticketPrice.toStringAsFixed(2)}'),
                 _buildDetailRow('Date:', _formatDate(event.startDateTime)),
-                _buildDetailRow('Location:', event.location),
+                _buildDetailRow('Location:', event.location!),
                 _buildDetailRow('Status:', status),
 
                 const SizedBox(height: 24),

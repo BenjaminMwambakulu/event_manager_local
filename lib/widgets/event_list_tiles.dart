@@ -157,7 +157,7 @@ class _EventListTilesState extends State<EventListTiles> {
                                           const SizedBox(width: 4),
                                           Expanded(
                                             child: Text(
-                                              event.location,
+                                              event.location!,
                                               style: Theme.of(context)
                                                   .textTheme
                                                   .bodySmall
