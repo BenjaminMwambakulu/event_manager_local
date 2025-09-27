@@ -52,7 +52,7 @@ Widget buildProfileRow(Profile profile) {
                 ),
               ),
               Text(
-                profile.email ?? 'No Email',
+                profile.email,
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
             ],

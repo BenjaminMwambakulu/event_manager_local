@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -42,7 +44,9 @@ class Payment {
       paymentMethod: json['payment_method'] ?? '',
       paymentDate: DateTime.parse(json['payment_date']),
       paymentStatus: json['payment_status'] ?? 'pending',
-      profile: json['profiles'] != null ? Profile.fromJson(json['profiles']) : null,
+      profile: json['profiles'] != null
+          ? Profile.fromJson(json['profiles'])
+          : null,
     );
   }
 
@@ -53,7 +57,7 @@ class Payment {
 class EventManagementPage extends StatefulWidget {
   final String organiserId;
 
-  const EventManagementPage({Key? key, required this.organiserId}) : super(key: key);
+  const EventManagementPage({super.key, required this.organiserId});
 
   @override
   State<EventManagementPage> createState() => _EventManagementPageState();
@@ -63,7 +67,7 @@ class _EventManagementPageState extends State<EventManagementPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final SupabaseClient supabase = Supabase.instance.client;
-  
+
   List<Event> events = [];
   Event? selectedEvent;
   List<Attendee> attendees = [];
@@ -201,10 +205,7 @@ class _EventManagementPageState extends State<EventManagementPage>
 
   Future<void> _updateEvent(Event event) async {
     try {
-      await supabase
-          .from('events')
-          .update(event.toJson())
-          .eq('id', event.id);
+      await supabase.from('events').update(event.toJson()).eq('id', event.id);
       await _loadEvents();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Event updated successfully')),
@@ -280,32 +281,27 @@ class _EventManagementPageState extends State<EventManagementPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Event Management'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadEvents,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadEvents),
         ],
       ),
       body: error != null
           ? _buildErrorState()
           : isLoading && events.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : events.isEmpty
-                  ? _buildEmptyState()
-                  : Column(
-                      children: [
-                        _buildEventSelector(),
-                        _buildTabBar(),
-                        Expanded(child: _buildTabBarView()),
-                      ],
-                    ),
+          ? const Center(child: CircularProgressIndicator())
+          : events.isEmpty
+          ? _buildEmptyState()
+          : Column(
+              children: [
+                _buildEventSelector(),
+                _buildTabBar(),
+                Expanded(child: _buildTabBarView()),
+              ],
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showCreateEventDialog,
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -316,11 +312,7 @@ class _EventManagementPageState extends State<EventManagementPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.red[400],
-          ),
+          Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
           const SizedBox(height: 16),
           Text(
             'Error',
@@ -336,10 +328,7 @@ class _EventManagementPageState extends State<EventManagementPage>
             child: Text(
               error!,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ),
           const SizedBox(height: 24),
@@ -348,7 +337,7 @@ class _EventManagementPageState extends State<EventManagementPage>
             icon: const Icon(Icons.refresh),
             label: const Text('Retry'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
+              backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
             ),
           ),
@@ -362,11 +351,7 @@ class _EventManagementPageState extends State<EventManagementPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.event_busy,
-            size: 64,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'No events found',
@@ -379,10 +364,7 @@ class _EventManagementPageState extends State<EventManagementPage>
           const SizedBox(height: 8),
           Text(
             'Create your first event to get started',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -390,7 +372,7 @@ class _EventManagementPageState extends State<EventManagementPage>
             icon: const Icon(Icons.add),
             label: const Text('Create Event'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
+              backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
@@ -404,12 +386,12 @@ class _EventManagementPageState extends State<EventManagementPage>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.deepPurple.withOpacity(0.1),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
       ),
       child: Row(
         children: [
-          Icon(Icons.event, color: Colors.deepPurple),
+          Icon(Icons.event, color: Colors.black45),
           const SizedBox(width: 8),
           Expanded(
             child: DropdownButton<Event>(
@@ -422,7 +404,10 @@ class _EventManagementPageState extends State<EventManagementPage>
                   value: event,
                   child: Text(
                     event.title,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
                   ),
                 );
               }).toList(),
@@ -477,9 +462,9 @@ class _EventManagementPageState extends State<EventManagementPage>
       color: Colors.white,
       child: TabBar(
         controller: _tabController,
-        labelColor: Colors.deepPurple,
+        labelColor: Colors.black,
         unselectedLabelColor: Colors.grey[600],
-        indicatorColor: Colors.deepPurple,
+        indicatorColor: Colors.black87,
         tabs: const [
           Tab(text: 'Overview', icon: Icon(Icons.dashboard, size: 18)),
           Tab(text: 'Attendees', icon: Icon(Icons.people, size: 18)),
@@ -530,9 +515,10 @@ class _EventManagementPageState extends State<EventManagementPage>
                       Expanded(
                         child: Text(
                           event.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                       ),
@@ -558,19 +544,21 @@ class _EventManagementPageState extends State<EventManagementPage>
                     ],
                   ),
                   const SizedBox(height: 8),
-                  if (event.description != null && event.description!.isNotEmpty) ...[
+                  if (event.description != null &&
+                      event.description!.isNotEmpty) ...[
                     Text(
                       event.description!,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
                     ),
                     const SizedBox(height: 12),
                   ],
                   Row(
                     children: [
-                      Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                      Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -598,7 +586,7 @@ class _EventManagementPageState extends State<EventManagementPage>
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Stats Cards
           Row(
             children: [
@@ -648,7 +636,12 @@ class _EventManagementPageState extends State<EventManagementPage>
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -700,19 +693,21 @@ class _EventManagementPageState extends State<EventManagementPage>
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Export functionality coming soon')),
-                  );
-                },
-                icon: const Icon(Icons.download, size: 18),
-                label: const Text('Export'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  foregroundColor: Colors.white,
-                ),
-              ),
+              // ElevatedButton.icon(
+              //   onPressed: () {
+              //     ScaffoldMessenger.of(context).showSnackBar(
+              //       const SnackBar(
+              //         content: Text('Export functionality coming soon'),
+              //       ),
+              //     );
+              //   },
+              //   icon: const Icon(Icons.download, size: 18),
+              //   label: const Text('Export'),
+              //   style: ElevatedButton.styleFrom(
+              //     backgroundColor: Colors.deepPurple,
+              //     foregroundColor: Colors.white,
+              //   ),
+              // ),
             ],
           ),
         ),
@@ -720,53 +715,64 @@ class _EventManagementPageState extends State<EventManagementPage>
           child: isLoading
               ? const Center(child: CircularProgressIndicator())
               : attendees.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'No attendees yet',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: attendees.length,
-                      itemBuilder: (context, index) {
-                        final attendee = attendees[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: attendee.checkIn ? Colors.green : Colors.grey,
-                              child: Icon(
-                                attendee.checkIn ? Icons.check : Icons.person,
-                                color: Colors.white,
+              ? const Center(
+                  child: Text(
+                    'No attendees yet',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: attendees.length,
+                  itemBuilder: (context, index) {
+                    final attendee = attendees[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: attendee.checkIn
+                              ? Colors.green
+                              : Colors.grey,
+                          child: Icon(
+                            attendee.checkIn ? Icons.check : Icons.person,
+                            color: Colors.white,
+                          ),
+                        ),
+                        title: Text(attendee.username),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (attendee.email.isNotEmpty) Text(attendee.email),
+                            Text(
+                              'Registered: ${attendee.formattedRegistrationDate}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
                               ),
                             ),
-                            title: Text(attendee.username),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (attendee.email.isNotEmpty) Text(attendee.email),
-                                Text(
-                                  'Registered: ${attendee.formattedRegistrationDate}',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ],
+                        ),
+                        trailing: attendee.checkIn
+                            ? const Chip(
+                                label: Text(
+                                  'Checked In',
+                                  style: TextStyle(fontSize: 12),
                                 ),
-                              ],
-                            ),
-                            trailing: attendee.checkIn
-                                ? const Chip(
-                                    label: Text('Checked In', style: TextStyle(fontSize: 12)),
-                                    backgroundColor: Colors.green,
-                                    labelStyle: TextStyle(color: Colors.white),
-                                  )
-                                : const Chip(
-                                    label: Text('Pending', style: TextStyle(fontSize: 12)),
-                                    backgroundColor: Colors.orange,
-                                    labelStyle: TextStyle(color: Colors.white),
-                                  ),
-                          ),
-                        );
-                      },
-                    ),
+                                backgroundColor: Colors.green,
+                                labelStyle: TextStyle(color: Colors.white),
+                              )
+                            : const Chip(
+                                label: Text(
+                                  'Pending',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                                backgroundColor: Colors.orange,
+                                labelStyle: TextStyle(color: Colors.white),
+                              ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -782,17 +788,14 @@ class _EventManagementPageState extends State<EventManagementPage>
             children: [
               const Text(
                 'Ticket Types',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               ElevatedButton.icon(
                 onPressed: _showAddTicketDialog,
                 icon: const Icon(Icons.add, size: 18),
                 label: const Text('Add Ticket'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -803,61 +806,71 @@ class _EventManagementPageState extends State<EventManagementPage>
           child: isLoading
               ? const Center(child: CircularProgressIndicator())
               : tickets.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'No tickets created yet',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: tickets.length,
-                      itemBuilder: (context, index) {
-                        final ticket = tickets[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.deepPurple,
-                              child: const Icon(Icons.confirmation_number, color: Colors.white),
-                            ),
-                            title: Text(ticket.type),
-                            subtitle: Text('\${ticket.price.toStringAsFixed(2)}'),
-                            trailing: PopupMenuButton(
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'edit',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit, size: 18),
-                                      SizedBox(width: 8),
-                                      Text('Edit'),
-                                    ],
-                                  ),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.delete, size: 18, color: Colors.red),
-                                      SizedBox(width: 8),
-                                      Text('Delete', style: TextStyle(color: Colors.red)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              onSelected: (value) {
-                                if (value == 'edit') {
-                                  _showEditTicketDialog(ticket);
-                                } else if (value == 'delete') {
-                                  _showDeleteTicketDialog(ticket);
-                                }
-                              },
-                            ),
+              ? const Center(
+                  child: Text(
+                    'No tickets created yet',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: tickets.length,
+                  itemBuilder: (context, index) {
+                    final ticket = tickets[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.black,
+                          child: const Icon(
+                            Icons.confirmation_number,
+                            color: Colors.white,
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                        title: Text(ticket.type),
+                        subtitle: Text(ticket.price.toStringAsFixed(2)),
+                        trailing: PopupMenuButton(
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Edit'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete,
+                                    size: 18,
+                                    color: Colors.red,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Delete',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              _showEditTicketDialog(ticket);
+                            } else if (value == 'delete') {
+                              _showDeleteTicketDialog(ticket);
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -877,7 +890,7 @@ class _EventManagementPageState extends State<EventManagementPage>
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.deepPurple.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -891,7 +904,7 @@ class _EventManagementPageState extends State<EventManagementPage>
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     Text(
-                      '\${totalRevenue.toStringAsFixed(2)}',
+                      totalRevenue.toStringAsFixed(2),
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -910,7 +923,7 @@ class _EventManagementPageState extends State<EventManagementPage>
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     Text(
-                      '\${pendingAmount.toStringAsFixed(2)}',
+                      pendingAmount.toStringAsFixed(2),
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -927,55 +940,66 @@ class _EventManagementPageState extends State<EventManagementPage>
           child: isLoading
               ? const Center(child: CircularProgressIndicator())
               : payments.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'No payments yet',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: payments.length,
-                      itemBuilder: (context, index) {
-                        final payment = payments[index];
-                        final isCompleted = payment.paymentStatus == 'completed';
-                        
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: isCompleted ? Colors.green : Colors.orange,
-                              child: Icon(
-                                isCompleted ? Icons.check_circle : Icons.schedule,
-                                color: Colors.white,
+              ? const Center(
+                  child: Text(
+                    'No payments yet',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: payments.length,
+                  itemBuilder: (context, index) {
+                    final payment = payments[index];
+                    final isCompleted = payment.paymentStatus == 'completed';
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: isCompleted
+                              ? Colors.green
+                              : Colors.orange,
+                          child: Icon(
+                            isCompleted ? Icons.check_circle : Icons.schedule,
+                            color: Colors.white,
+                          ),
+                        ),
+                        title: Text(payment.amount.toStringAsFixed(2)),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${payment.username} - ${payment.paymentMethod}',
+                            ),
+                            Text(
+                              DateFormat(
+                                'MMM dd, yyyy - HH:mm',
+                              ).format(payment.paymentDate),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
                               ),
                             ),
-                            title: Text('\${payment.amount.toStringAsFixed(2)}'),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('${payment.username} - ${payment.paymentMethod}'),
-                                Text(
-                                  DateFormat('MMM dd, yyyy - HH:mm').format(payment.paymentDate),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            trailing: Chip(
-                              label: Text(
-                                payment.paymentStatus.toUpperCase(),
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                              ),
-                              backgroundColor: isCompleted ? Colors.green : Colors.orange,
-                              labelStyle: const TextStyle(color: Colors.white),
+                          ],
+                        ),
+                        trailing: Chip(
+                          label: Text(
+                            payment.paymentStatus.toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        );
-                      },
-                    ),
+                          backgroundColor: isCompleted
+                              ? Colors.green
+                              : Colors.orange,
+                          labelStyle: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -985,8 +1009,10 @@ class _EventManagementPageState extends State<EventManagementPage>
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final locationController = TextEditingController();
-    DateTime startDateTime = DateTime.now().add(const Duration(days: 7));
-    DateTime endDateTime = DateTime.now().add(const Duration(days: 7, hours: 3));
+    DateTime startDateTime = DateTime.now().add(const Duration(hours: 1));
+    DateTime endDateTime = DateTime.now().add(
+      const Duration(days: 7, hours: 3),
+    );
     bool isFeatured = false;
 
     showDialog(
@@ -1032,12 +1058,16 @@ class _EventManagementPageState extends State<EventManagementPage>
                             context: context,
                             initialDate: startDateTime,
                             firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365),
+                            ),
                           );
                           if (date != null) {
                             final time = await showTimePicker(
                               context: context,
-                              initialTime: TimeOfDay.fromDateTime(startDateTime),
+                              initialTime: TimeOfDay.fromDateTime(
+                                startDateTime,
+                              ),
                             );
                             if (time != null) {
                               setState(() {
@@ -1058,7 +1088,9 @@ class _EventManagementPageState extends State<EventManagementPage>
                             border: OutlineInputBorder(),
                           ),
                           child: Text(
-                            DateFormat('MMM dd, yyyy - HH:mm').format(startDateTime),
+                            DateFormat(
+                              'MMM dd, yyyy - HH:mm',
+                            ).format(startDateTime),
                           ),
                         ),
                       ),
@@ -1075,7 +1107,9 @@ class _EventManagementPageState extends State<EventManagementPage>
                             context: context,
                             initialDate: endDateTime,
                             firstDate: startDateTime,
-                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365),
+                            ),
                           );
                           if (date != null) {
                             final time = await showTimePicker(
@@ -1101,7 +1135,9 @@ class _EventManagementPageState extends State<EventManagementPage>
                             border: OutlineInputBorder(),
                           ),
                           child: Text(
-                            DateFormat('MMM dd, yyyy - HH:mm').format(endDateTime),
+                            DateFormat(
+                              'MMM dd, yyyy - HH:mm',
+                            ).format(endDateTime),
                           ),
                         ),
                       ),
@@ -1136,11 +1172,11 @@ class _EventManagementPageState extends State<EventManagementPage>
                   final event = Event(
                     id: '',
                     title: titleController.text,
-                    description: descriptionController.text.isNotEmpty 
-                        ? descriptionController.text 
+                    description: descriptionController.text.isNotEmpty
+                        ? descriptionController.text
                         : null,
-                    location: locationController.text.isNotEmpty 
-                        ? locationController.text 
+                    location: locationController.text.isNotEmpty
+                        ? locationController.text
                         : null,
                     organiserId: widget.organiserId,
                     startDateTime: startDateTime,
@@ -1154,7 +1190,7 @@ class _EventManagementPageState extends State<EventManagementPage>
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: Colors.black87,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Create'),
@@ -1167,8 +1203,12 @@ class _EventManagementPageState extends State<EventManagementPage>
 
   void _showEditEventDialog(Event event) {
     final titleController = TextEditingController(text: event.title);
-    final descriptionController = TextEditingController(text: event.description ?? '');
-    final locationController = TextEditingController(text: event.location ?? '');
+    final descriptionController = TextEditingController(
+      text: event.description ?? '',
+    );
+    final locationController = TextEditingController(
+      text: event.location ?? '',
+    );
     DateTime startDateTime = event.startDateTime;
     DateTime endDateTime = event.endDateTime;
     bool isFeatured = event.isFeatured;
@@ -1216,12 +1256,16 @@ class _EventManagementPageState extends State<EventManagementPage>
                             context: context,
                             initialDate: startDateTime,
                             firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365),
+                            ),
                           );
                           if (date != null) {
                             final time = await showTimePicker(
                               context: context,
-                              initialTime: TimeOfDay.fromDateTime(startDateTime),
+                              initialTime: TimeOfDay.fromDateTime(
+                                startDateTime,
+                              ),
                             );
                             if (time != null) {
                               setState(() {
@@ -1242,7 +1286,9 @@ class _EventManagementPageState extends State<EventManagementPage>
                             border: OutlineInputBorder(),
                           ),
                           child: Text(
-                            DateFormat('MMM dd, yyyy - HH:mm').format(startDateTime),
+                            DateFormat(
+                              'MMM dd, yyyy - HH:mm',
+                            ).format(startDateTime),
                           ),
                         ),
                       ),
@@ -1259,7 +1305,9 @@ class _EventManagementPageState extends State<EventManagementPage>
                             context: context,
                             initialDate: endDateTime,
                             firstDate: startDateTime,
-                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365),
+                            ),
                           );
                           if (date != null) {
                             final time = await showTimePicker(
@@ -1285,7 +1333,9 @@ class _EventManagementPageState extends State<EventManagementPage>
                             border: OutlineInputBorder(),
                           ),
                           child: Text(
-                            DateFormat('MMM dd, yyyy - HH:mm').format(endDateTime),
+                            DateFormat(
+                              'MMM dd, yyyy - HH:mm',
+                            ).format(endDateTime),
                           ),
                         ),
                       ),
@@ -1320,11 +1370,11 @@ class _EventManagementPageState extends State<EventManagementPage>
                   final updatedEvent = Event(
                     id: event.id,
                     title: titleController.text,
-                    description: descriptionController.text.isNotEmpty 
-                        ? descriptionController.text 
+                    description: descriptionController.text.isNotEmpty
+                        ? descriptionController.text
                         : null,
-                    location: locationController.text.isNotEmpty 
-                        ? locationController.text 
+                    location: locationController.text.isNotEmpty
+                        ? locationController.text
                         : null,
                     organiserId: event.organiserId,
                     startDateTime: startDateTime,
@@ -1338,7 +1388,7 @@ class _EventManagementPageState extends State<EventManagementPage>
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: Colors.black87,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Save'),
@@ -1354,7 +1404,9 @@ class _EventManagementPageState extends State<EventManagementPage>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Event'),
-        content: Text('Are you sure you want to delete "${event.title}"? This action cannot be undone.'),
+        content: Text(
+          'Are you sure you want to delete "${event.title}"? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1402,7 +1454,9 @@ class _EventManagementPageState extends State<EventManagementPage>
                 border: OutlineInputBorder(),
                 prefixText: '\$',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ],
         ),
@@ -1413,7 +1467,8 @@ class _EventManagementPageState extends State<EventManagementPage>
           ),
           ElevatedButton(
             onPressed: () {
-              if (typeController.text.isNotEmpty && priceController.text.isNotEmpty) {
+              if (typeController.text.isNotEmpty &&
+                  priceController.text.isNotEmpty) {
                 final price = double.tryParse(priceController.text);
                 if (price != null && price >= 0) {
                   final ticket = Ticket(
@@ -1427,7 +1482,7 @@ class _EventManagementPageState extends State<EventManagementPage>
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
+              backgroundColor: Colors.black87,
               foregroundColor: Colors.white,
             ),
             child: const Text('Add'),
@@ -1439,7 +1494,9 @@ class _EventManagementPageState extends State<EventManagementPage>
 
   void _showEditTicketDialog(Ticket ticket) {
     final typeController = TextEditingController(text: ticket.type);
-    final priceController = TextEditingController(text: ticket.price.toString());
+    final priceController = TextEditingController(
+      text: ticket.price.toString(),
+    );
 
     showDialog(
       context: context,
@@ -1463,7 +1520,9 @@ class _EventManagementPageState extends State<EventManagementPage>
                 border: OutlineInputBorder(),
                 prefixText: '\$',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ],
         ),
@@ -1474,7 +1533,8 @@ class _EventManagementPageState extends State<EventManagementPage>
           ),
           ElevatedButton(
             onPressed: () {
-              if (typeController.text.isNotEmpty && priceController.text.isNotEmpty) {
+              if (typeController.text.isNotEmpty &&
+                  priceController.text.isNotEmpty) {
                 final price = double.tryParse(priceController.text);
                 if (price != null && price >= 0) {
                   final updatedTicket = Ticket(
@@ -1488,7 +1548,7 @@ class _EventManagementPageState extends State<EventManagementPage>
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
+              backgroundColor: Colors.black87,
               foregroundColor: Colors.white,
             ),
             child: const Text('Save'),
@@ -1503,7 +1563,9 @@ class _EventManagementPageState extends State<EventManagementPage>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Ticket'),
-        content: Text('Are you sure you want to delete "${ticket.type}" ticket?'),
+        content: Text(
+          'Are you sure you want to delete "${ticket.type}" ticket?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

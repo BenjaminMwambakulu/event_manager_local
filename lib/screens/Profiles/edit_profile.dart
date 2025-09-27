@@ -41,7 +41,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       setState(() {
         _profile = profile;
         _usernameController.text = profile.username;
-        _emailController.text = profile.email ?? '';
+        _emailController.text = profile.email;
       });
     }
   }
