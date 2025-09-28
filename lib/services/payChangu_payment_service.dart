@@ -4,7 +4,12 @@ import 'package:uuid/uuid.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Payment status enum matching your database enum
-enum PaymentStatus { pending, success, failed, cancelled }
+enum PaymentStatus {
+  pending,
+  success,
+  failed,
+  cancelled,
+}
 
 /// Mobile money operators supported by PayChangu
 enum MobileOperator {
@@ -109,7 +114,9 @@ class EventPaymentResult {
     );
   }
 
-  factory EventPaymentResult.cancelled({required String message}) {
+  factory EventPaymentResult.cancelled({
+    required String message,
+  }) {
     return EventPaymentResult(
       isSuccess: false,
       isPending: false,
@@ -126,8 +133,7 @@ class EventPaymentService {
   final SupabaseClient supabase;
   final bool isTestMode;
 
-  static const String _baseUrl =
-      'https://api.paychangu.com/mobile-money/payments';
+  static const String _baseUrl = 'https://api.paychangu.com/mobile-money/payments';
   late final Map<String, String> _headers;
 
   EventPaymentService({
@@ -147,56 +153,44 @@ class EventPaymentService {
   String _generateChargeId() => const Uuid().v4();
 
   /// Creates a payment record in Supabase
-  Future<String> _createPaymentRecord(
-    EventPaymentRequest request,
-    String chargeId,
-  ) async {
+  Future<String> _createPaymentRecord(EventPaymentRequest request, String chargeId) async {
     try {
-      final response = await supabase
-          .from('payment')
-          .insert({
-            'user_id': request.userId,
-            'event_id': request.eventId,
-            'ticket_id': request.ticketId,
-            'amount': request.amount,
-            'payment_method':
-                'mobile_money_${request.operator.name.toLowerCase()}',
-            'payment_status': 'pending',
-            // Store the charge_id in a metadata field or create a custom field
-          })
-          .select('id')
-          .single();
+      final response = await supabase.from('payment').insert({
+        'user_id': request.userId,
+        'event_id': request.eventId,
+        'ticket_id': request.ticketId,
+        'amount': request.amount,
+        'payment_method': 'mobile_money_${request.operator.name.toLowerCase()}',
+        'payment_status': 'pending',
+        'charge_id': chargeId, // Store the PayChangu charge ID
+      }).select('id').single();
 
-      return response['id'] as String;
+      // Fix: Explicitly cast to String and handle potential null
+      final paymentId = response['id'] as String?;
+      if (paymentId == null) {
+        throw Exception('Failed to get payment ID from database response');
+      }
+
+      return paymentId;
     } catch (e) {
       throw Exception('Failed to create payment record: $e');
     }
   }
 
   /// Updates payment record status
-  Future<void> _updatePaymentStatus(
-    String paymentId,
-    PaymentStatus status,
-  ) async {
+  Future<void> _updatePaymentStatus(String paymentId, PaymentStatus status) async {
     try {
-      await supabase
-          .from('payment')
-          .update({
-            'payment_status': status.name,
-            'payment_date': DateTime.now().toIso8601String(),
-          })
-          .eq('id', paymentId);
+      await supabase.from('payment').update({
+        'payment_status': status.name,
+        'payment_date': DateTime.now().toIso8601String(),
+      }).eq('id', paymentId);
     } catch (e) {
       throw Exception('Failed to update payment status: $e');
     }
   }
 
   /// Creates attendee record after successful payment
-  Future<void> _createAttendeeRecord(
-    String userId,
-    String eventId,
-    String ticketId,
-  ) async {
+  Future<void> _createAttendeeRecord(String userId, String eventId, String ticketId) async {
     try {
       await supabase.from('attendee').insert({
         'user_id': userId,
@@ -245,8 +239,7 @@ class EventPaymentService {
       );
 
       // Validate response content type
-      if (!(response.headers['content-type']?.contains("application/json") ??
-          false)) {
+      if (!(response.headers['content-type']?.contains("application/json") ?? false)) {
         return EventPaymentResult.failed(
           message: "Invalid response format from payment gateway",
         );
@@ -261,34 +254,26 @@ class EventPaymentService {
           chargeId: chargeId,
         );
       } else {
-        // Fix: Ensure message is always a String, even if data['message'] is a Map
-        final messageData = data['message'];
-        final message = messageData != null 
-            ? (messageData is String ? messageData : messageData.toString()) 
-            : "Failed to initiate payment";
-            
         return EventPaymentResult.failed(
-          message: message,
+          message: data['message'] ?? "Failed to initiate payment",
         );
       }
     } catch (e) {
-      return EventPaymentResult.failed(message: "Network error: $e");
+      return EventPaymentResult.failed(
+        message: "Network error: $e",
+      );
     }
   }
 
   /// Verifies payment status with PayChangu
-  Future<EventPaymentResult> verifyPayment(
-    String chargeId,
-    String paymentId,
-  ) async {
+  Future<EventPaymentResult> verifyPayment(String chargeId, String paymentId) async {
     try {
       final response = await http.get(
         Uri.parse('$_baseUrl/$chargeId/verify'),
         headers: _headers,
       );
 
-      if (!(response.headers['content-type']?.contains("application/json") ??
-          false)) {
+      if (!(response.headers['content-type']?.contains("application/json") ?? false)) {
         return EventPaymentResult.failed(
           message: "Invalid response format from payment gateway",
           paymentId: paymentId,
@@ -297,20 +282,9 @@ class EventPaymentService {
 
       final data = jsonDecode(response.body);
       final statusText = data['data']?['status'] ?? data['status'];
-      final transactionCharge = data['data']?['transaction_charges']?['amount']
-          ?.toString();
+      final transactionCharge = data['data']?['transaction_charges']?['amount']?.toString();
 
-      // Fix: Handle cases where statusText might be a Map or other type
-      String statusMessage;
-      if (statusText == null) {
-        statusMessage = "Unknown payment status";
-      } else if (statusText is String) {
-        statusMessage = statusText;
-      } else {
-        statusMessage = statusText.toString();
-      }
-
-      switch (statusMessage.toLowerCase()) {
+      switch (statusText?.toLowerCase()) {
         case 'success':
           return EventPaymentResult.success(
             message: "Payment completed successfully!",
@@ -333,15 +307,14 @@ class EventPaymentService {
           );
         default:
           return EventPaymentResult.failed(
-            message: "Unknown payment status: $statusMessage",
+            message: "Unknown payment status: $statusText",
             paymentId: paymentId,
             chargeId: chargeId,
           );
       }
     } catch (e) {
-      // Fix: Ensure the error message is always a String
       return EventPaymentResult.failed(
-        message: "Payment verification error: ${e.toString()}",
+        message: "Payment verification error: $e",
         paymentId: paymentId,
       );
     }
@@ -354,10 +327,7 @@ class EventPaymentService {
   }) async {
     try {
       // Check if user is already registered
-      final isRegistered = await isUserAlreadyRegistered(
-        request.userId,
-        request.eventId,
-      );
+      final isRegistered = await isUserAlreadyRegistered(request.userId, request.eventId);
       if (isRegistered) {
         return EventPaymentResult.failed(
           message: "You are already registered for this event",
@@ -372,7 +342,7 @@ class EventPaymentService {
 
       // Initiate payment
       final initResult = await _initiatePayment(request, chargeId);
-
+      
       if (!initResult.isPending) {
         // Update payment status to failed
         await _updatePaymentStatus(paymentId, PaymentStatus.failed);
@@ -393,11 +363,7 @@ class EventPaymentService {
       if (verifyResult.isSuccess) {
         finalStatus = PaymentStatus.success;
         // Create attendee record for successful payment
-        await _createAttendeeRecord(
-          request.userId,
-          request.eventId,
-          request.ticketId,
-        );
+        await _createAttendeeRecord(request.userId, request.eventId, request.ticketId);
       } else if (verifyResult.isPending) {
         finalStatus = PaymentStatus.pending;
       } else {
@@ -416,8 +382,11 @@ class EventPaymentService {
         chargeId: chargeId,
         transactionCharge: verifyResult.transactionCharge,
       );
+
     } catch (e) {
-      return EventPaymentResult.failed(message: "Payment processing error: $e");
+      return EventPaymentResult.failed(
+        message: "Payment processing error: $e",
+      );
     }
   }
 
@@ -443,7 +412,9 @@ class EventPaymentService {
         message: "Successfully registered for the event!",
       );
     } catch (e) {
-      return EventPaymentResult.failed(message: "Registration failed: $e");
+      return EventPaymentResult.failed(
+        message: "Registration failed: $e",
+      );
     }
   }
 
@@ -453,10 +424,7 @@ class EventPaymentService {
   }
 
   /// Public method to verify payment status (alias for verifyPayment)
-  Future<EventPaymentResult> verifyPaymentStatus(
-    String chargeId,
-    String paymentId,
-  ) async {
+  Future<EventPaymentResult> verifyPaymentStatus(String chargeId, String paymentId) async {
     return await verifyPayment(chargeId, paymentId);
   }
 

@@ -43,16 +43,18 @@ class _EventPaymentDialogState extends State<EventPaymentDialog> {
     // Remove any spaces or special characters
     final cleanNumber = value.replaceAll(RegExp(r'[^\d]'), '');
     
-    // Check if it starts with 265 (Malawi country code) and has correct length
-    if (cleanNumber.length < 9) {
-      return 'Phone number is too short';
+    // Check for 9-digit format (without country code) - PayChangu expects this format
+    if (cleanNumber.length == 9) {
+      // Valid 9-digit number
+      return null;
     }
     
-    if (!cleanNumber.startsWith('265') && cleanNumber.length != 9) {
-      return 'Please enter a valid Malawi phone number';
+    // Check for 12-digit format with country code (265xxxxxxxxx)
+    if (cleanNumber.length == 12 && cleanNumber.startsWith('265')) {
+      return null;
     }
     
-    return null;
+    return 'Enter a valid mobile number of nine (9) digits.';
   }
 
   String? _validateEmail(String? value) {
@@ -72,11 +74,18 @@ class _EventPaymentDialogState extends State<EventPaymentDialog> {
     // Remove all non-digit characters
     final cleanNumber = phone.replaceAll(RegExp(r'[^\d]'), '');
     
-    // If it doesn't start with 265, add it (assuming it's a local number)
-    if (!cleanNumber.startsWith('265') && cleanNumber.length == 9) {
-      return '265$cleanNumber';
+    // PayChangu expects the number WITHOUT the country code
+    // If it starts with 265, remove it to get the 9-digit format
+    if (cleanNumber.startsWith('265') && cleanNumber.length == 12) {
+      return cleanNumber.substring(3); // Remove '265' prefix
     }
     
+    // If it's already 9 digits, return as is
+    if (cleanNumber.length == 9) {
+      return cleanNumber;
+    }
+    
+    // For any other format, return the clean number
     return cleanNumber;
   }
 
@@ -179,14 +188,15 @@ class _EventPaymentDialogState extends State<EventPaymentDialog> {
                 controller: _phoneController,
                 decoration: const InputDecoration(
                   labelText: 'Phone Number',
-                  hintText: '265xxxxxxxxx or xxxxxxxxx',
+                  hintText: '990000000 or 899817565',
+                  helperText: 'Enter 9 digits without country code (265)',
                   prefixIcon: Icon(Icons.phone),
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(12),
+                  LengthLimitingTextInputFormatter(12), // Allow for country code input too
                 ],
                 validator: _validatePhoneNumber,
               ),
@@ -242,17 +252,38 @@ class _EventPaymentDialogState extends State<EventPaymentDialog> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.orange.shade200),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline, color: Colors.orange.shade700),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'You will receive a mobile money prompt on your phone to complete the payment.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.orange.shade700,
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.orange.shade700),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'You will receive a mobile money prompt on your phone to complete the payment.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange.shade700,
+                            ),
+                          ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Test Numbers:',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange.shade800,
+                      ),
+                    ),
+                    Text(
+                      'Airtel: 990000000 (Success), 990000001 (Failed)\nTNM: 899817565 (Success), 899817566 (Failed)',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.orange.shade700,
                       ),
                     ),
                   ],
