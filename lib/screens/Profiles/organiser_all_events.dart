@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 // Import your existing models
 import 'package:event_manager_local/models/event_model.dart';
@@ -511,6 +513,29 @@ class _EventManagementPageState extends State<EventManagementPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (event.bannerUrl != null && event.bannerUrl!.isNotEmpty) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        event.bannerUrl!,
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => 
+                          Container(
+                            height: 200,
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1013,6 +1038,59 @@ class _EventManagementPageState extends State<EventManagementPage>
       const Duration(days: 7, hours: 3),
     );
     bool isFeatured = false;
+    File? _bannerImage;
+
+    Future<void> _pickImage() async {
+      final pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        imageQuality: 80,
+      );
+      
+      if (pickedFile != null) {
+        setState(() {
+          _bannerImage = File(pickedFile.path);
+        });
+      }
+    }
+
+    Future<String?> _uploadBannerImage() async {
+      if (_bannerImage == null) return null;
+      
+      try {
+        final bytes = await _bannerImage!.readAsBytes();
+        final maxSize = 2 * 1024 * 1024; // 2MB
+        
+        if (bytes.length > maxSize) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Image size should be less than 2MB')),
+            );
+          }
+          return null;
+        }
+        
+        final String fileName = 'banners/${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final SupabaseClient supabase = Supabase.instance.client;
+        
+        await supabase.storage.from('banners').uploadBinary(
+          fileName,
+          bytes,
+          fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+        );
+        
+        final String url = supabase.storage.from('banners').getPublicUrl(fileName);
+        return url;
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload banner: $e')),
+          );
+        }
+        return null;
+      }
+    }
 
     showDialog(
       context: context,
@@ -1157,6 +1235,68 @@ class _EventManagementPageState extends State<EventManagementPage>
                     const Text('Featured Event'),
                   ],
                 ),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Event Banner',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        height: 150,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: _bannerImage != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  _bannerImage!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                ),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image,
+                                    size: 50,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text('Tap to select banner image'),
+                                  const Text(
+                                    'Max size: 2MB',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_bannerImage != null)
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _bannerImage = null;
+                          });
+                        },
+                        child: const Text('Remove Image'),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -1166,8 +1306,17 @@ class _EventManagementPageState extends State<EventManagementPage>
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (titleController.text.isNotEmpty) {
+                  String? bannerUrl;
+                  if (_bannerImage != null) {
+                    bannerUrl = await _uploadBannerImage();
+                    if (bannerUrl == null) {
+                      // Failed to upload, show error and don't create event
+                      return;
+                    }
+                  }
+                  
                   final event = Event(
                     id: '',
                     title: titleController.text,
@@ -1177,6 +1326,7 @@ class _EventManagementPageState extends State<EventManagementPage>
                     location: locationController.text.isNotEmpty
                         ? locationController.text
                         : null,
+                    bannerUrl: bannerUrl,
                     organiserId: widget.organiserId,
                     startDateTime: startDateTime,
                     endDateTime: endDateTime,
@@ -1211,6 +1361,60 @@ class _EventManagementPageState extends State<EventManagementPage>
     DateTime startDateTime = event.startDateTime;
     DateTime endDateTime = event.endDateTime;
     bool isFeatured = event.isFeatured;
+    File? _bannerImage;
+    String? _existingBannerUrl = event.bannerUrl;
+
+    Future<void> _pickImage() async {
+      final pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        imageQuality: 80,
+      );
+      
+      if (pickedFile != null) {
+        setState(() {
+          _bannerImage = File(pickedFile.path);
+        });
+      }
+    }
+
+    Future<String?> _uploadBannerImage() async {
+      if (_bannerImage == null) return _existingBannerUrl;
+      
+      try {
+        final bytes = await _bannerImage!.readAsBytes();
+        final maxSize = 2 * 1024 * 1024; // 2MB
+        
+        if (bytes.length > maxSize) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Image size should be less than 2MB')),
+            );
+          }
+          return null;
+        }
+        
+        final String fileName = 'banners/${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final SupabaseClient supabase = Supabase.instance.client;
+        
+        await supabase.storage.from('banners').uploadBinary(
+          fileName,
+          bytes,
+          fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+        );
+        
+        final String url = supabase.storage.from('banners').getPublicUrl(fileName);
+        return url;
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload banner: $e')),
+          );
+        }
+        return null;
+      }
+    }
 
     showDialog(
       context: context,
@@ -1355,6 +1559,86 @@ class _EventManagementPageState extends State<EventManagementPage>
                     const Text('Featured Event'),
                   ],
                 ),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Event Banner',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        height: 150,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: _bannerImage != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  _bannerImage!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                ),
+                              )
+                            : (_existingBannerUrl != null && _existingBannerUrl!.isNotEmpty)
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      _existingBannerUrl!,
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      errorBuilder: (context, error, stackTrace) => 
+                                        Container(
+                                          color: Colors.grey[200],
+                                          child: const Icon(
+                                            Icons.broken_image,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                    ),
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.image,
+                                        size: 50,
+                                        color: Colors.grey[400],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text('Tap to select banner image'),
+                                      const Text(
+                                        'Max size: 2MB',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_bannerImage != null || (_existingBannerUrl != null && _existingBannerUrl!.isNotEmpty))
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _bannerImage = null;
+                            _existingBannerUrl = null;
+                          });
+                        },
+                        child: const Text('Remove Image'),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -1364,8 +1648,17 @@ class _EventManagementPageState extends State<EventManagementPage>
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (titleController.text.isNotEmpty) {
+                  String? bannerUrl = _existingBannerUrl;
+                  if (_bannerImage != null) {
+                    bannerUrl = await _uploadBannerImage();
+                    if (bannerUrl == null) {
+                      // Failed to upload, show error and don't update event
+                      return;
+                    }
+                  }
+                  
                   final updatedEvent = Event(
                     id: event.id,
                     title: titleController.text,
@@ -1375,6 +1668,7 @@ class _EventManagementPageState extends State<EventManagementPage>
                     location: locationController.text.isNotEmpty
                         ? locationController.text
                         : null,
+                    bannerUrl: bannerUrl,
                     organiserId: event.organiserId,
                     startDateTime: startDateTime,
                     endDateTime: endDateTime,
