@@ -37,7 +37,7 @@ class _EventDetailsState extends State<EventDetails> {
   void _initializePaymentService() {
     _paymentService = EventPaymentService(
       apiKey:
-          "sec-test-KmHIsNhSdeKjxpJdC8tUL92Nc7OKx6QK", // Replace with your API key
+          "sec-test-f2NqaRNqhEdDQSgcMr4eRtPr0uJ2pgXP", 
       supabase: _supabase,
       isTestMode: true, // Set to false for production
     );
