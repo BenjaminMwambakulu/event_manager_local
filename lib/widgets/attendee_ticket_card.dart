@@ -138,7 +138,7 @@ class AttendeeTicketCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            '${ticket.type} - ${ticket.price == 0 ? 'FREE' : '\$${ticket.price.toStringAsFixed(2)}'}',
+                            '${ticket.type} - ${ticket.price == 0 ? 'FREE' : 'MK ${ticket.price.toStringAsFixed(2)}'}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,

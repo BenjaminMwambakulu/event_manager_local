@@ -117,7 +117,7 @@ class FeaturedCarousel extends StatelessWidget {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          "\$${(event.tickets.isNotEmpty ? event.tickets[0].price.toStringAsFixed(2) : '0.00')}",
+                                          "MK ${(event.tickets.isNotEmpty ? event.tickets[0].price.toStringAsFixed(2) : '0.00')}",
                                           style: const TextStyle(
                                             color: Colors.white70,
                                             fontSize: 14,

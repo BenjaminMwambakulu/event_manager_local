@@ -624,7 +624,7 @@ class _EventManagementPageState extends State<EventManagementPage>
               Expanded(
                 child: _buildStatCard(
                   'Revenue',
-                  '\$${totalRevenue.toStringAsFixed(2)}',
+                  'MK ${totalRevenue.toStringAsFixed(2)}',
                   Icons.attach_money,
                   Colors.purple,
                 ),

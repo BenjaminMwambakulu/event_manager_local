@@ -72,7 +72,7 @@ class _SimpleDashState extends State<SimpleDash> {
             children: [
               _buildDashCard(
                 "Total Revenue",
-                "\$${_totalRevenue.toStringAsFixed(2)}",
+                "MK ${_totalRevenue.toStringAsFixed(2)}",
                 Colors.orange,
               ),
               const SizedBox(width: 16),

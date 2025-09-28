@@ -126,7 +126,7 @@ class _TicketSelectorState extends State<TicketSelector> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      isFree ? 'FREE' : '\$${ticket.price.toStringAsFixed(2)}',
+                      isFree ? 'FREE' : 'MK ${ticket.price.toStringAsFixed(2)}',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: isFree 

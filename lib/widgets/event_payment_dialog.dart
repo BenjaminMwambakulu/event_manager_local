@@ -172,7 +172,7 @@ class _EventPaymentDialogState extends State<EventPaymentDialog> {
                     Text('Ticket: ${widget.ticketType}'),
                     const SizedBox(height: 4),
                     Text(
-                      'Amount: \$${widget.ticketPrice.toStringAsFixed(2)}',
+                      'Amount: MK ${widget.ticketPrice.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -306,7 +306,7 @@ class _EventPaymentDialogState extends State<EventPaymentDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text('Pay \$${widget.ticketPrice.toStringAsFixed(2)}'),
+              : Text('Pay MK ${widget.ticketPrice.toStringAsFixed(2)}'),
         ),
       ],
     );

@@ -109,7 +109,7 @@ class RegistrationService {
           children: [
             Text('Event: ${event.title}'),
             Text('Ticket: ${ticket.type}'),
-            Text('Amount: \$${ticket.price.toStringAsFixed(2)}'),
+            Text('Amount: MK ${ticket.price.toStringAsFixed(2)}'),
             const SizedBox(height: 16),
             const Text(
               'This is a demo. In a real app, this would redirect to your payment gateway.',

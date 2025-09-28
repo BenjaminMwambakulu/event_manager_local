@@ -3,7 +3,6 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-
 class TicketCard extends StatelessWidget {
   final Event event;
 
@@ -15,8 +14,12 @@ class TicketCard extends StatelessWidget {
     final userId = supabase.auth.currentUser?.id ?? '';
     final qrData = 'event_${event.id}_user_$userId';
     final status = _getEventStatus(event.startDateTime, event.endDateTime);
-    final ticketPrice = event.tickets.isNotEmpty ? event.tickets.first.price : 0.0;
-    final ticketType = event.tickets.isNotEmpty ? event.tickets.first.type : 'General';
+    final ticketPrice = event.tickets.isNotEmpty
+        ? event.tickets.first.price
+        : 0.0;
+    final ticketType = event.tickets.isNotEmpty
+        ? event.tickets.first.type
+        : 'General';
 
     return Container(
       decoration: BoxDecoration(
@@ -97,7 +100,7 @@ class TicketCard extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      '\$${ticketPrice.toStringAsFixed(2)}',
+                      'MK ${ticketPrice.toStringAsFixed(2)}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.blue.shade700,
                         fontWeight: FontWeight.bold,
@@ -221,8 +224,12 @@ class TicketCard extends StatelessWidget {
     final supabase = Supabase.instance.client;
     final userId = supabase.auth.currentUser?.id ?? '';
     final qrData = 'event_${event.id}_user_$userId';
-    final ticketPrice = event.tickets.isNotEmpty ? event.tickets.first.price : 0.0;
-    final ticketType = event.tickets.isNotEmpty ? event.tickets.first.type : 'General';
+    final ticketPrice = event.tickets.isNotEmpty
+        ? event.tickets.first.price
+        : 0.0;
+    final ticketType = event.tickets.isNotEmpty
+        ? event.tickets.first.type
+        : 'General';
     final status = _getEventStatus(event.startDateTime, event.endDateTime);
 
     showDialog(
@@ -239,9 +246,9 @@ class TicketCard extends StatelessWidget {
               children: [
                 Text(
                   event.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -265,7 +272,10 @@ class TicketCard extends StatelessWidget {
                 // Event details
                 _buildDetailRow('Event ID:', event.id),
                 _buildDetailRow('Type:', ticketType),
-                _buildDetailRow('Price:', '\$${ticketPrice.toStringAsFixed(2)}'),
+                _buildDetailRow(
+                  'Price:',
+                  'MK ${ticketPrice.toStringAsFixed(2)}',
+                ),
                 _buildDetailRow('Date:', _formatDate(event.startDateTime)),
                 _buildDetailRow('Location:', event.location!),
                 _buildDetailRow('Status:', status),
