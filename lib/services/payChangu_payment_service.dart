@@ -261,8 +261,14 @@ class EventPaymentService {
           chargeId: chargeId,
         );
       } else {
+        // Fix: Ensure message is always a String, even if data['message'] is a Map
+        final messageData = data['message'];
+        final message = messageData != null 
+            ? (messageData is String ? messageData : messageData.toString()) 
+            : "Failed to initiate payment";
+            
         return EventPaymentResult.failed(
-          message: data['message'] ?? "Failed to initiate payment",
+          message: message,
         );
       }
     } catch (e) {
@@ -294,7 +300,17 @@ class EventPaymentService {
       final transactionCharge = data['data']?['transaction_charges']?['amount']
           ?.toString();
 
-      switch (statusText?.toLowerCase()) {
+      // Fix: Handle cases where statusText might be a Map or other type
+      String statusMessage;
+      if (statusText == null) {
+        statusMessage = "Unknown payment status";
+      } else if (statusText is String) {
+        statusMessage = statusText;
+      } else {
+        statusMessage = statusText.toString();
+      }
+
+      switch (statusMessage.toLowerCase()) {
         case 'success':
           return EventPaymentResult.success(
             message: "Payment completed successfully!",
@@ -317,14 +333,15 @@ class EventPaymentService {
           );
         default:
           return EventPaymentResult.failed(
-            message: "Unknown payment status: $statusText",
+            message: "Unknown payment status: $statusMessage",
             paymentId: paymentId,
             chargeId: chargeId,
           );
       }
     } catch (e) {
+      // Fix: Ensure the error message is always a String
       return EventPaymentResult.failed(
-        message: "Payment verification error: $e",
+        message: "Payment verification error: ${e.toString()}",
         paymentId: paymentId,
       );
     }
