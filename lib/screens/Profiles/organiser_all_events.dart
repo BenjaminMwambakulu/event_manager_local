@@ -492,8 +492,10 @@ class _EventManagementPageState extends State<EventManagementPage>
   Widget _buildOverviewTab() {
     final event = selectedEvent!;
     final checkedInCount = attendees.where((a) => a.checkIn).length;
+    
+    // Fix: Include both 'success' and 'completed' status for revenue calculation
     final totalRevenue = payments
-        .where((p) => p.paymentStatus == 'completed')
+        .where((p) => p.paymentStatus == 'success' || p.paymentStatus == 'completed')
         .fold(0.0, (sum, p) => sum + p.amount);
 
     return SingleChildScrollView(
@@ -693,21 +695,6 @@ class _EventManagementPageState extends State<EventManagementPage>
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              // ElevatedButton.icon(
-              //   onPressed: () {
-              //     ScaffoldMessenger.of(context).showSnackBar(
-              //       const SnackBar(
-              //         content: Text('Export functionality coming soon'),
-              //       ),
-              //     );
-              //   },
-              //   icon: const Icon(Icons.download, size: 18),
-              //   label: const Text('Export'),
-              //   style: ElevatedButton.styleFrom(
-              //     backgroundColor: Colors.deepPurple,
-              //     foregroundColor: Colors.white,
-              //   ),
-              // ),
             ],
           ),
         ),
@@ -828,7 +815,7 @@ class _EventManagementPageState extends State<EventManagementPage>
                           ),
                         ),
                         title: Text(ticket.type),
-                        subtitle: Text(ticket.price.toStringAsFixed(2)),
+                        subtitle: Text('MK ${ticket.price.toStringAsFixed(2)}'),
                         trailing: PopupMenuButton(
                           itemBuilder: (context) => [
                             const PopupMenuItem(
@@ -877,9 +864,11 @@ class _EventManagementPageState extends State<EventManagementPage>
   }
 
   Widget _buildPaymentsTab() {
+    // Fix: Include both 'success' and 'completed' status
     final totalRevenue = payments
-        .where((p) => p.paymentStatus == 'completed')
+        .where((p) => p.paymentStatus == 'success' || p.paymentStatus == 'completed')
         .fold(0.0, (sum, p) => sum + p.amount);
+    
     final pendingAmount = payments
         .where((p) => p.paymentStatus == 'pending')
         .fold(0.0, (sum, p) => sum + p.amount);
@@ -904,7 +893,7 @@ class _EventManagementPageState extends State<EventManagementPage>
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     Text(
-                      totalRevenue.toStringAsFixed(2),
+                      'MK ${totalRevenue.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -923,7 +912,7 @@ class _EventManagementPageState extends State<EventManagementPage>
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     Text(
-                      pendingAmount.toStringAsFixed(2),
+                      'MK ${pendingAmount.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -951,7 +940,9 @@ class _EventManagementPageState extends State<EventManagementPage>
                   itemCount: payments.length,
                   itemBuilder: (context, index) {
                     final payment = payments[index];
-                    final isCompleted = payment.paymentStatus == 'completed';
+                    // Fix: Check for both 'success' and 'completed' status
+                    final isCompleted = payment.paymentStatus == 'success' || 
+                                      payment.paymentStatus == 'completed';
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
@@ -959,13 +950,19 @@ class _EventManagementPageState extends State<EventManagementPage>
                         leading: CircleAvatar(
                           backgroundColor: isCompleted
                               ? Colors.green
-                              : Colors.orange,
+                              : payment.paymentStatus == 'pending'
+                                  ? Colors.orange
+                                  : Colors.red,
                           child: Icon(
-                            isCompleted ? Icons.check_circle : Icons.schedule,
+                            isCompleted 
+                                ? Icons.check_circle 
+                                : payment.paymentStatus == 'pending'
+                                    ? Icons.schedule
+                                    : Icons.error,
                             color: Colors.white,
                           ),
                         ),
-                        title: Text(payment.amount.toStringAsFixed(2)),
+                        title: Text('MK ${payment.amount.toStringAsFixed(2)}'),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -993,7 +990,9 @@ class _EventManagementPageState extends State<EventManagementPage>
                           ),
                           backgroundColor: isCompleted
                               ? Colors.green
-                              : Colors.orange,
+                              : payment.paymentStatus == 'pending'
+                                  ? Colors.orange
+                                  : Colors.red,
                           labelStyle: const TextStyle(color: Colors.white),
                         ),
                       ),
@@ -1452,7 +1451,7 @@ class _EventManagementPageState extends State<EventManagementPage>
               decoration: const InputDecoration(
                 labelText: 'Price *',
                 border: OutlineInputBorder(),
-                prefixText: '\$',
+                prefixText: 'MK ',
               ),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -1518,7 +1517,7 @@ class _EventManagementPageState extends State<EventManagementPage>
               decoration: const InputDecoration(
                 labelText: 'Price *',
                 border: OutlineInputBorder(),
-                prefixText: '\$',
+                prefixText: 'MK ',
               ),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
