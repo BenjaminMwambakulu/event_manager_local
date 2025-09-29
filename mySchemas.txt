@@ -1,0 +1,127 @@
+create table public.attendee (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  user_id uuid null,
+  event_id uuid null,
+  ticket_id uuid null,
+  created_at timestamp with time zone null default now(),
+  check_in boolean null default false,
+  constraint attendee_pkey primary key (id),
+  constraint attendee_user_id_fkey foreign KEY (user_id) references profiles (id) on delete CASCADE,
+  constraint attendee_event_id_fkey foreign KEY (event_id) references events (id) on delete CASCADE,
+  constraint attendee_ticket_id_fkey foreign KEY (ticket_id) references tickets (id) on delete set null
+) TABLESPACE pg_default;
+
+create table public.categories (
+  id serial not null,
+  name text not null,
+  constraint categories_pkey primary key (id),
+  constraint categories_name_key unique (name)
+) TABLESPACE pg_default;
+
+create table public.event_categories (
+  id serial not null,
+  event_id uuid null,
+  category_id integer null,
+  constraint event_categories_pkey primary key (id),
+  constraint event_categories_event_id_category_id_key unique (event_id, category_id),
+  constraint event_categories_event_id_fkey foreign KEY (event_id) references events (id) on delete CASCADE,
+  constraint event_categories_category_id_fkey foreign KEY (category_id) references categories (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create table public.event_rating (
+  id serial not null,
+  event_id uuid null,
+  rating_id integer null,
+  constraint event_rating_pkey primary key (id),
+  constraint event_rating_event_id_rating_id_key unique (event_id, rating_id),
+  constraint event_rating_event_id_fkey foreign KEY (event_id) references events (id) on delete CASCADE,
+  constraint event_rating_rating_id_fkey foreign KEY (rating_id) references ratings (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create table public.events (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  title text not null,
+  description text null,
+  location text null,
+  banner_url text null,
+  organiser_id uuid null,
+  start_datetime timestamp without time zone not null,
+  end_datetime timestamp without time zone not null,
+  is_featured boolean null default false,
+  created_at timestamp without time zone null default now(),
+  updated_at timestamp without time zone null default now(),
+  constraint events_pkey primary key (id),
+  constraint events_organiser_id_fkey foreign KEY (organiser_id) references profiles (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create table public.payment (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  user_id uuid null,
+  event_id uuid null,
+  ticket_id uuid null,
+  amount numeric(10, 2) not null,
+  payment_method text not null,
+  payment_date timestamp without time zone null default now(),
+  payment_status public.pay_status_enum null default 'pending'::pay_status_enum,
+  charge_id character varying(255) null,
+  constraint payment_pkey primary key (id),
+  constraint payment_user_id_fkey foreign KEY (user_id) references profiles (id) on delete CASCADE,
+  constraint payment_event_id_fkey foreign KEY (event_id) references events (id) on delete CASCADE,
+  constraint payment_ticket_id_fkey foreign KEY (ticket_id) references tickets (id) on delete set null
+) TABLESPACE pg_default;
+
+create index IF not exists idx_payment_charge_id on public.payment using btree (charge_id) TABLESPACE pg_default;
+
+create table public.profiles (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  user_id uuid null,
+  profile_url text null default 'http://localhost:8000/storage/v1/object/public/avatars//defaultProfile.png'::text,
+  username text not null,
+  email text not null,
+  phone text null,
+  role text null default 'customer'::text,
+  created_at timestamp without time zone null default now(),
+  updated_at timestamp without time zone null default now(),
+  constraint profiles_pkey primary key (id),
+  constraint profiles_username_key unique (username),
+  constraint profiles_email_key unique (email),
+  constraint profiles_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint profiles_role_check check (
+    (
+      role = any (array['customer'::text, 'organiser'::text])
+    )
+  )
+) TABLESPACE pg_default;
+
+create table public.ratings (
+  id serial not null,
+  rating integer not null,
+  constraint ratings_pkey primary key (id),
+  constraint ratings_rating_check check (
+    (
+      (rating >= 1)
+      and (rating <= 5)
+    )
+  )
+) TABLESPACE pg_default;
+
+create table public.tickets (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  event_id uuid null,
+  price numeric(10, 2) not null,
+  type text not null,
+  constraint tickets_pkey primary key (id),
+  constraint tickets_event_id_fkey foreign KEY (event_id) references events (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create table public.locations (
+  id uuid primary key default uuid_generate_v4(),
+  name text not null,
+  description text,
+  latitude double precision not null,
+  longitude double precision not null,
+  created_at timestamptz default now()
+);
+
+
+
