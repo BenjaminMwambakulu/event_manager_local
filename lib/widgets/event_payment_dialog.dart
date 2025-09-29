@@ -204,7 +204,7 @@ class _EventPaymentDialogState extends State<EventPaymentDialog> {
 
               // Mobile operator selection
               DropdownButtonFormField<MobileOperator>(
-                value: _selectedOperator,
+                initialValue: _selectedOperator,
                 decoration: const InputDecoration(
                   labelText: 'Mobile Operator',
                   prefixIcon: Icon(Icons.sim_card),

@@ -54,8 +54,6 @@ class RegistrationService {
       if (user == null) {
         return RegistrationResult.failure('Please log in to register for events');
       }
-
-      // TODO: Implement payment gateway integration
       // For now, we'll simulate the payment flow
       final shouldProceed = await _showPaymentDialog(context, event, ticket);
       

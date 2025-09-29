@@ -4,6 +4,7 @@ import 'package:event_manager_local/widgets/full_width_button.dart';
 import 'package:event_manager_local/widgets/ticket_selector.dart';
 import 'package:event_manager_local/models/ticket.dart';
 import 'package:event_manager_local/utils/image_utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -69,7 +70,9 @@ class _EventDetailsState extends State<EventDetails> {
         });
       }
     } catch (e) {
-      print('Error checking registration status: $e');
+      if (kDebugMode) {
+        print('Error checking registration status: $e');
+      }
     }
   }
 

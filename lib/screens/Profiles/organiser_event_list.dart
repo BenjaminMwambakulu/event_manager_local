@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:event_manager_local/models/event_model.dart';
 import 'package:event_manager_local/screens/Profiles/organiser_all_events.dart';
 import 'package:event_manager_local/services/organiser_service.dart';
