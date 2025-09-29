@@ -1,16 +1,18 @@
 // ignore_for_file: unused_local_variable, use_build_context_synchronously, no_leading_underscores_for_local_identifiers
 
+import 'package:event_manager_local/models/attendee_model.dart';
+import 'package:event_manager_local/models/profile.dart';
+import 'package:event_manager_local/models/ticket.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
-
-// Import your existing models
 import 'package:event_manager_local/models/event_model.dart';
-import 'package:event_manager_local/models/attendee_model.dart';
-import 'package:event_manager_local/models/ticket.dart';
-import 'package:event_manager_local/models/profile.dart';
+import 'package:event_manager_local/utils/image_utils.dart';
+import 'package:event_manager_local/screens/event_map/event_location_map.dart'; // Add this import
+import 'package:latlong2/latlong.dart'; // Add this import
 
 // Add this Payment model to your models folder
 class Payment {
@@ -77,6 +79,7 @@ class _EventManagementPageState extends State<EventManagementPage>
   List<Payment> payments = [];
   bool isLoading = true;
   String? error;
+  LatLng? location;
 
   @override
   void initState() {
@@ -494,10 +497,12 @@ class _EventManagementPageState extends State<EventManagementPage>
   Widget _buildOverviewTab() {
     final event = selectedEvent!;
     final checkedInCount = attendees.where((a) => a.checkIn).length;
-    
+
     // Fix: Include both 'success' and 'completed' status for revenue calculation
     final totalRevenue = payments
-        .where((p) => p.paymentStatus == 'success' || p.paymentStatus == 'completed')
+        .where(
+          (p) => p.paymentStatus == 'success' || p.paymentStatus == 'completed',
+        )
         .fold(0.0, (sum, p) => sum + p.amount);
 
     return SingleChildScrollView(
@@ -513,7 +518,8 @@ class _EventManagementPageState extends State<EventManagementPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (event.bannerUrl != null && event.bannerUrl!.isNotEmpty) ...[
+                  if (event.bannerUrl != null &&
+                      event.bannerUrl!.isNotEmpty) ...[
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Image.network(
@@ -521,17 +527,13 @@ class _EventManagementPageState extends State<EventManagementPage>
                         height: 200,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => 
-                          Container(
-                            height: 200,
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                color: Colors.grey,
-                              ),
-                            ),
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 200,
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: Icon(Icons.broken_image, color: Colors.grey),
                           ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -895,9 +897,11 @@ class _EventManagementPageState extends State<EventManagementPage>
   Widget _buildPaymentsTab() {
     // Fix: Include both 'success' and 'completed' status
     final totalRevenue = payments
-        .where((p) => p.paymentStatus == 'success' || p.paymentStatus == 'completed')
+        .where(
+          (p) => p.paymentStatus == 'success' || p.paymentStatus == 'completed',
+        )
         .fold(0.0, (sum, p) => sum + p.amount);
-    
+
     final pendingAmount = payments
         .where((p) => p.paymentStatus == 'pending')
         .fold(0.0, (sum, p) => sum + p.amount);
@@ -970,8 +974,9 @@ class _EventManagementPageState extends State<EventManagementPage>
                   itemBuilder: (context, index) {
                     final payment = payments[index];
                     // Fix: Check for both 'success' and 'completed' status
-                    final isCompleted = payment.paymentStatus == 'success' || 
-                                      payment.paymentStatus == 'completed';
+                    final isCompleted =
+                        payment.paymentStatus == 'success' ||
+                        payment.paymentStatus == 'completed';
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
@@ -980,14 +985,14 @@ class _EventManagementPageState extends State<EventManagementPage>
                           backgroundColor: isCompleted
                               ? Colors.green
                               : payment.paymentStatus == 'pending'
-                                  ? Colors.orange
-                                  : Colors.red,
+                              ? Colors.orange
+                              : Colors.red,
                           child: Icon(
-                            isCompleted 
-                                ? Icons.check_circle 
+                            isCompleted
+                                ? Icons.check_circle
                                 : payment.paymentStatus == 'pending'
-                                    ? Icons.schedule
-                                    : Icons.error,
+                                ? Icons.schedule
+                                : Icons.error,
                             color: Colors.white,
                           ),
                         ),
@@ -1020,8 +1025,8 @@ class _EventManagementPageState extends State<EventManagementPage>
                           backgroundColor: isCompleted
                               ? Colors.green
                               : payment.paymentStatus == 'pending'
-                                  ? Colors.orange
-                                  : Colors.red,
+                              ? Colors.orange
+                              : Colors.red,
                           labelStyle: const TextStyle(color: Colors.white),
                         ),
                       ),
@@ -1043,6 +1048,7 @@ class _EventManagementPageState extends State<EventManagementPage>
     );
     bool isFeatured = false;
     File? _bannerImage;
+    LatLng? _selectedLocation; // Add this line to store map-selected location
 
     Future<void> _pickImage() async {
       final pickedFile = await ImagePicker().pickImage(
@@ -1051,7 +1057,7 @@ class _EventManagementPageState extends State<EventManagementPage>
         maxHeight: 1000,
         imageQuality: 80,
       );
-      
+
       if (pickedFile != null) {
         setState(() {
           _bannerImage = File(pickedFile.path);
@@ -1061,30 +1067,40 @@ class _EventManagementPageState extends State<EventManagementPage>
 
     Future<String?> _uploadBannerImage() async {
       if (_bannerImage == null) return null;
-      
+
       try {
         final bytes = await _bannerImage!.readAsBytes();
         final maxSize = 2 * 1024 * 1024; // 2MB
-        
+
         if (bytes.length > maxSize) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Image size should be less than 2MB')),
+              const SnackBar(
+                content: Text('Image size should be less than 2MB'),
+              ),
             );
           }
           return null;
         }
-        
-        final String fileName = 'banners/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+        final String fileName =
+            'banners/${DateTime.now().millisecondsSinceEpoch}.jpg';
         final SupabaseClient supabase = Supabase.instance.client;
-        
-        await supabase.storage.from('banners').uploadBinary(
-          fileName,
-          bytes,
-          fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-        );
-        
-        final String url = supabase.storage.from('banners').getPublicUrl(fileName);
+
+        await supabase.storage
+            .from('banners')
+            .uploadBinary(
+              fileName,
+              bytes,
+              fileOptions: const FileOptions(
+                cacheControl: '3600',
+                upsert: false,
+              ),
+            );
+
+        final String url = supabase.storage
+            .from('banners')
+            .getPublicUrl(fileName);
         return url;
       } catch (e) {
         if (context.mounted) {
@@ -1129,6 +1145,37 @@ class _EventManagementPageState extends State<EventManagementPage>
                     border: OutlineInputBorder(),
                   ),
                 ),
+                const SizedBox(height: 8),
+                // Add map location button
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EventLocationMap(),
+                      ),
+                    );
+
+                    if (result != null && result is LatLng) {
+                      setState(() {
+                        _selectedLocation = result;
+                        // Convert coordinates to a string representation
+                        locationController.text =
+                            'Lat: ${result.latitude.toStringAsFixed(6)}, Lng: ${result.longitude.toStringAsFixed(6)}';
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.map),
+                  label: const Text('Select on Map'),
+                ),
+                if (_selectedLocation != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      'Selected: Lat ${_selectedLocation!.latitude.toStringAsFixed(6)}, Lng ${_selectedLocation!.longitude.toStringAsFixed(6)}',
+                      style: const TextStyle(fontSize: 12, color: Colors.green),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -1320,7 +1367,7 @@ class _EventManagementPageState extends State<EventManagementPage>
                       return;
                     }
                   }
-                  
+
                   final event = Event(
                     id: '',
                     title: titleController.text,
@@ -1367,6 +1414,7 @@ class _EventManagementPageState extends State<EventManagementPage>
     bool isFeatured = event.isFeatured;
     File? _bannerImage;
     String? _existingBannerUrl = event.bannerUrl;
+    LatLng? _selectedLocation; // Add this line to store map-selected location
 
     Future<void> _pickImage() async {
       final pickedFile = await ImagePicker().pickImage(
@@ -1375,7 +1423,7 @@ class _EventManagementPageState extends State<EventManagementPage>
         maxHeight: 1000,
         imageQuality: 80,
       );
-      
+
       if (pickedFile != null) {
         setState(() {
           _bannerImage = File(pickedFile.path);
@@ -1385,30 +1433,40 @@ class _EventManagementPageState extends State<EventManagementPage>
 
     Future<String?> _uploadBannerImage() async {
       if (_bannerImage == null) return _existingBannerUrl;
-      
+
       try {
         final bytes = await _bannerImage!.readAsBytes();
         final maxSize = 2 * 1024 * 1024; // 2MB
-        
+
         if (bytes.length > maxSize) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Image size should be less than 2MB')),
+              const SnackBar(
+                content: Text('Image size should be less than 2MB'),
+              ),
             );
           }
           return null;
         }
-        
-        final String fileName = 'banners/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+        final String fileName =
+            'banners/${DateTime.now().millisecondsSinceEpoch}.jpg';
         final SupabaseClient supabase = Supabase.instance.client;
-        
-        await supabase.storage.from('banners').uploadBinary(
-          fileName,
-          bytes,
-          fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-        );
-        
-        final String url = supabase.storage.from('banners').getPublicUrl(fileName);
+
+        await supabase.storage
+            .from('banners')
+            .uploadBinary(
+              fileName,
+              bytes,
+              fileOptions: const FileOptions(
+                cacheControl: '3600',
+                upsert: false,
+              ),
+            );
+
+        final String url = supabase.storage
+            .from('banners')
+            .getPublicUrl(fileName);
         return url;
       } catch (e) {
         if (context.mounted) {
@@ -1453,6 +1511,37 @@ class _EventManagementPageState extends State<EventManagementPage>
                     border: OutlineInputBorder(),
                   ),
                 ),
+                const SizedBox(height: 8),
+                // Add map location button
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EventLocationMap(),
+                      ),
+                    );
+
+                    if (result != null && result is LatLng) {
+                      setState(() {
+                        _selectedLocation = result;
+                        // Convert coordinates to a string representation
+                        locationController.text =
+                            'Lat: ${result.latitude.toStringAsFixed(6)}, Lng: ${result.longitude.toStringAsFixed(6)}';
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.map),
+                  label: const Text('Select on Map'),
+                ),
+                if (_selectedLocation != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      'Selected: Lat ${_selectedLocation!.latitude.toStringAsFixed(6)}, Lng ${_selectedLocation!.longitude.toStringAsFixed(6)}',
+                      style: const TextStyle(fontSize: 12, color: Colors.green),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -1592,46 +1681,47 @@ class _EventManagementPageState extends State<EventManagementPage>
                                   width: double.infinity,
                                 ),
                               )
-                            : (_existingBannerUrl != null && _existingBannerUrl!.isNotEmpty)
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      _existingBannerUrl!,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      errorBuilder: (context, error, stackTrace) => 
-                                        Container(
-                                          color: Colors.grey[200],
-                                          child: const Icon(
-                                            Icons.broken_image,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                    ),
-                                  )
-                                : Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.image,
-                                        size: 50,
-                                        color: Colors.grey[400],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      const Text('Tap to select banner image'),
-                                      const Text(
-                                        'Max size: 2MB',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
+                            : (_existingBannerUrl != null &&
+                                  _existingBannerUrl!.isNotEmpty)
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: CachedNetworkImage(
+                                  imageUrl: ImageUtils.fixImageUrl(
+                                    _existingBannerUrl!,
                                   ),
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  placeholder: (context, url) =>
+                                      const CircularProgressIndicator(),
+                                  errorWidget: (context, url, error) =>
+                                      const Icon(Icons.error),
+                                ),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image,
+                                    size: 50,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text('Tap to select banner image'),
+                                  const Text(
+                                    'Max size: 2MB',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    if (_bannerImage != null || (_existingBannerUrl != null && _existingBannerUrl!.isNotEmpty))
+                    if (_bannerImage != null ||
+                        (_existingBannerUrl != null &&
+                            _existingBannerUrl!.isNotEmpty))
                       ElevatedButton(
                         onPressed: () {
                           setState(() {
@@ -1662,7 +1752,7 @@ class _EventManagementPageState extends State<EventManagementPage>
                       return;
                     }
                   }
-                  
+
                   final updatedEvent = Event(
                     id: event.id,
                     title: titleController.text,
