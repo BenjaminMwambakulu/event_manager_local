@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:event_manager_local/models/event_model.dart';
-import 'package:event_manager_local/screens/Profiles/organiser_all_events.dart';
+import 'package:event_manager_local/screens/event_management/event_management_screen.dart';
 import 'package:event_manager_local/services/organiser_service.dart';
 import 'package:event_manager_local/widgets/event_list_tiles.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +31,7 @@ class _OrganiserEventListState extends State<OrganiserEventList> {
       organiserID = profile['id'];
     });
   }
-  
+
   void _fetchEvents() async {
     final eventsData = await OrganiserService().getOrganiserEvents();
     final events = eventsData.map((e) => Event.fromJson(e)).toList();

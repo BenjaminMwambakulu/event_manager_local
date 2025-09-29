@@ -33,11 +33,12 @@ class Payment {
       paymentMethod: json['payment_method'] ?? '',
       paymentDate: DateTime.parse(json['payment_date']),
       paymentStatus: json['payment_status'] ?? 'pending',
-      profile: json['profiles'] != null ? Profile.fromJson(json['profiles']) : null,
+      profile: json['profiles'] != null
+          ? Profile.fromJson(json['profiles'])
+          : null,
     );
   }
 
-  // Helper getters for easier access
   String get username => profile?.username ?? 'Unknown';
   String get email => profile?.email ?? '';
 }
