@@ -16,8 +16,8 @@ void main() async {
   await Supabase.initialize(
     url:
         // 'https://nhjtarucvmudvygklrma.supabase.co',
-        // 'http://10.0.2.2:8000',
-        'http://41.70.95.75:8000',
+        'http://10.0.2.2:8000',
+    // 'http://41.70.95.75:8000',
     anonKey:
         // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oanRhcnVjdm11ZHZ5Z2tscm1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg5OTU3OTUsImV4cCI6MjA3NDU3MTc5NX0.Ss4N_VCkrrAqyePOt9ibVl_r6R0nGRURj5j_CpdOr_A',
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
